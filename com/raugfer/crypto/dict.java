@@ -19,11 +19,13 @@ public class dict {
         return map.containsKey(key);
     }
 
+    @SuppressWarnings("unchecked")
     public <A> A get(String key) {
         if (!map.containsKey(key)) throw new IllegalArgumentException("Unknown key");
         return (A) map.get(key);
     }
 
+    @SuppressWarnings("unchecked")
     public <A> A get(String key, A def) {
         return map.containsKey(key) ? (A) map.get(key) : def;
     }
