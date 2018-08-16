@@ -251,7 +251,7 @@ public class coins {
         attrs.put("confirmations", 10);
         attrs.put("block.time", 15);
         attrs.put("decimals", 0);
-        attrs.put("asset", "9b7cffdaa674beae0f930ebe6085af9093e5fe56b34a5c220ccdcf6efc336fc5");
+        attrs.put("asset", "c56f33fc6ecfcd0c225c4ab356fee59390af8560be0e930faebe74a6daff7c9b");
         coins.put("neo", attrs);
     }
 
