@@ -3,9 +3,7 @@ package com.raugfer.crypto;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class service {
 
@@ -157,11 +155,12 @@ public class service {
             }
             dict[] _utxos = utxos;
             context f = (lookup) -> {
-                Set<String> set = new HashSet<>();
-                for (dict utxo : _utxos) {
-                    set.add(lookup.call(utxo.get("address")));
+                Object[] params = new Object[_utxos.length];
+                for (int i = 0; i < _utxos.length; i++) {
+                    dict utxo = _utxos[i];
+                    params[i] = new Object[]{ lookup.call(utxo.get("address")), utxo.get("amount") };
                 }
-                return set.toArray();
+                return params;
             };
             dict[] inputs = new dict[utxos.length];
             for (int i = 0; i < utxos.length; i++) {
@@ -174,16 +173,17 @@ public class service {
             BigInteger change = balance.subtract(amount.add(fee));
             if (change.compareTo(BigInteger.ZERO) < 0) throw new IllegalArgumentException("Insufficient balance");
             boolean has_change = change.compareTo(BigInteger.ZERO) > 0;
+            BigInteger scale = BigInteger.TEN.pow(8);
             dict[] outputs = new dict[has_change ? 2 : 1];
             dict output = new dict();
             output.put("asset", asset);
-            output.put("amount", amount);
+            output.put("amount", amount.multiply(scale));
             output.put("address", address);
             outputs[0] = output;
             if (has_change) {
                 output = new dict();
                 output.put("asset", asset);
-                output.put("amount", change);
+                output.put("amount", change.multiply(scale));
                 output.put("address", change_address);
                 outputs[1] = output;
             }

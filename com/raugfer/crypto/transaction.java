@@ -3,7 +3,10 @@ package com.raugfer.crypto;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class transaction {
 
@@ -444,15 +447,15 @@ public class transaction {
         pair<BigInteger, String> t = wallet.address_decode(address, coin, testnet);
         BigInteger h = t.l;
         String kind = t.r;
-        byte[] b1 = binint.h2b(asset);
+        byte[] b1 = bytes.rev(binint.h2b(asset));
         byte[] b2 = int64(amount);
         byte[] b3 = binint.n2b(h, 20);
         return bytes.concat(b1, b2, b3);
     }
 
     private static byte[] neoinout_script_encode(dict fields) {
-        byte[] invocation_script = fields.get("invocation_script");
-        byte[] verification_script = fields.get("verification_script");
+        byte[] invocation_script = fields.get("invocation");
+        byte[] verification_script = fields.get("verification");
         byte[] b1 = varint(BigInteger.valueOf(invocation_script.length));
         byte[] b2 = invocation_script;
         byte[] b3 = varint(BigInteger.valueOf(verification_script.length));
@@ -591,8 +594,8 @@ public class transaction {
             byte[] b9 = new byte[scripts_length];
             int scripts_offset = 0;
             for (byte[] b_script : b_scripts) {
-                System.arraycopy(b_script, 0, b9, outputs_offset, b_script.length);
-                outputs_offset += b_script.length;
+                System.arraycopy(b_script, 0, b9, scripts_offset, b_script.length);
+                scripts_offset += b_script.length;
             }
             return bytes.concat(bytes.concat(b1, b2, b3, b4, b5, b6), b7, b8, b9);
         }
@@ -858,7 +861,7 @@ public class transaction {
     private static pair<dict, byte[]> neoinout_output_decode(byte[] txn, String coin, boolean testnet) {
         int asset_size = 32;
         if (asset_size > txn.length) throw new IllegalArgumentException("End of input");
-        String asset = binint.b2h(bytes.sub(txn, 0, asset_size));
+        String asset = binint.b2h(bytes.rev(bytes.sub(txn, 0, asset_size)));
         txn = bytes.sub(txn, asset_size);
         pair<BigInteger, byte[]> t = parse_int64(txn);
         BigInteger amount = t.l;
@@ -1499,23 +1502,50 @@ public class transaction {
         }
         if (fmt.equals("neoinout")) {
             dict fields = transaction_decode(txn, coin, testnet);
+            dict[] inputs = fields.get("inputs");
             if (fields.has("scripts")) fields.del("scripts");
             txn = transaction_encode(fields, coin, testnet);
-            if (!(params instanceof Object[])) params = new Object[]{ params };
+            if (!(params instanceof Object[])) {
+                Object[] t = new Object[inputs.length];
+                for (int i = 0; i < t.length; i++) t[i] = params;
+                params = t;
+            }
             Object[] _params = (Object[]) params;
-            dict[] scripts = new dict[_params.length];
-            for (int i = 0; i < _params.length; i++) {
-                String privatekey = (String) _params[i];
+            List<String> hashset = new ArrayList<>();
+            Map<String, dict> scriptmap = new HashMap<>();
+            for (Object param : _params) {
+                String privatekey = null;
+                BigInteger amount = null;
+                if (param instanceof String) {
+                    privatekey = (String) param;
+                }
+                if (param instanceof Object[]) {
+                    Object[] tuple = (Object[]) param;
+                    privatekey = (String) tuple[0];
+                    amount = (BigInteger) tuple[1];
+                }
                 String publickey = wallet.publickey_from_privatekey(privatekey, coin, testnet);
+                String address = wallet.address_from_publickey(publickey, coin, testnet);
+                pair<BigInteger, String> t = wallet.address_decode(address, coin, testnet);
+                BigInteger h = t.l;
+                String kind = t.r;
+                String hash160 = binint.b2h(bytes.rev(binint.n2b(h, 20)));
+                if (hashset.contains(hash160)) continue;
                 byte[] signature = signing.signature_create(privatekey, txn, null, coin, testnet);
                 byte[] invocation_script = script.OP_PUSHDATA(signature);
                 byte[] verification_script = bytes.concat(script.OP_PUSHDATA(binint.h2b(publickey)), script.OP_CHECKSIG);
+                hashset.add(hash160);
                 dict map = new dict();
                 map.put("invocation", invocation_script);
                 map.put("verification", verification_script);
-                scripts[i] = map;
+                scriptmap.put(hash160, map);
             }
-            fields.put("scripts", scripts);
+            Collections.sort(hashset);
+            List<dict> scripts = new ArrayList<>();
+            for (String hash160 : hashset) {
+                scripts.add(scriptmap.get(hash160));
+            }
+            fields.put("scripts", scripts.toArray(new dict[]{ }));
             return transaction_encode(fields, coin, testnet);
         }
         if (fmt.equals("rlp")) {
