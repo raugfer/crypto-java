@@ -133,6 +133,7 @@ public class service {
         }
         if (fmt.equals("neoinout")) {
             String asset = coins.attr("asset", coin, testnet);
+            int decimals = coins.attr("decimals", coin, testnet);
             List<dict> list = new ArrayList<>();
             for (String source_address : source_addresses) {
                 list.addAll(Arrays.asList(cb.get_utxos(source_address, coin, testnet)));
@@ -173,7 +174,7 @@ public class service {
             BigInteger change = balance.subtract(amount.add(fee));
             if (change.compareTo(BigInteger.ZERO) < 0) throw new IllegalArgumentException("Insufficient balance");
             boolean has_change = change.compareTo(BigInteger.ZERO) > 0;
-            BigInteger scale = BigInteger.TEN.pow(8);
+            BigInteger scale = BigInteger.TEN.pow(8 - decimals);
             dict[] outputs = new dict[has_change ? 2 : 1];
             dict output = new dict();
             output.put("asset", asset);

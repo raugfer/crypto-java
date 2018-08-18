@@ -257,6 +257,14 @@ public class coins {
 
     static {
         dict attrs = new dict();
+        attrs.put("overloads", "neo");
+        attrs.put("decimals", 8);
+        attrs.put("asset", "602c79718b16e442de58778e148d0b1084e3b2dffd5de6b7b16cee7969282de7");
+        coins.put("neogas", attrs);
+    }
+
+    static {
+        dict attrs = new dict();
         attrs.put("overloads", "bitcoin");
         attrs.put("privatekey.base58.prefix", (_testnetfun) (testnet -> testnet ? new byte[]{ (byte)0xef } : new byte[]{ (byte)0x80 }));
         attrs.put("address.base58.prefix", (_testnetfun) (testnet -> testnet ? new byte[]{ (byte)0x78 } : new byte[]{ (byte)0x3a }));
