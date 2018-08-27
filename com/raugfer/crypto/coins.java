@@ -70,7 +70,7 @@ public class coins {
         attrs.put("hdwallet.coin_type", 5);
         attrs.put("confirmations", 6);
         attrs.put("block.time", 5 * 30);
-	attrs.put("default_fee", 1000);
+        attrs.put("default_fee", 1000);
         coins.put("dash", attrs);
     }
 
@@ -273,7 +273,7 @@ public class coins {
         attrs.put("hdwallet.coin_type", 2301);
         attrs.put("confirmations", 20);
         attrs.put("block.time", 2 * 64);
-	attrs.put("default_fee", 400000);
+        attrs.put("default_fee", 400000);
         coins.put("qtum", attrs);
     }
 
