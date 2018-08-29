@@ -226,6 +226,7 @@ public class coins {
         attrs.put("base58.check", "hash256:4");
         attrs.put("privatekey.format", "base58");
         attrs.put("privatekey.compressed", true);
+        attrs.put("privatekey.mini", false);
         attrs.put("publickey.format", "sec2");
         attrs.put("publickey.compressed", true);
         attrs.put("address.format", "base58");
@@ -284,6 +285,7 @@ public class coins {
         attrs.put("base58.check", "hash256:4");
         attrs.put("privatekey.format", "base58");
         attrs.put("privatekey.compressed", false);
+        attrs.put("privatekey.mini", false);
         attrs.put("publickey.format", "base58");
         attrs.put("publickey.compressed", true);
         attrs.put("address.format", "base58");
