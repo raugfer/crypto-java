@@ -41,6 +41,12 @@ public class signing {
             byte[] hexs = bytes.rev(binint.n2b(s, 32));
             return bytes.concat(hexr, hexs);
         }
+        if (fmt.equals("blex")) {
+            if (odd) s = s.or(BigInteger.ONE.shiftLeft(255));
+            byte[] hexr = bytes.rev(binint.n2b(r, 32));
+            byte[] hexs = bytes.rev(binint.n2b(s, 32));
+            return bytes.concat(hexr, hexs);
+        }
         throw new IllegalStateException("Unknown format");
     }
 
@@ -90,6 +96,14 @@ public class signing {
             BigInteger s = binint.b2n(bytes.rev(bytes.sub(signature, 32)));
             return new Object[]{ r, s, null };
         }
+        if (fmt.equals("blex")) {
+            if (signature.length != 64) throw new IllegalArgumentException("Invalid signature");
+            BigInteger r = binint.b2n(bytes.rev(bytes.sub(signature, 0, 32)));
+            BigInteger s = binint.b2n(bytes.rev(bytes.sub(signature, 32)));
+            boolean odd = s.shiftRight(255).and(BigInteger.ONE).equals(BigInteger.ONE);
+            s = s.and(BigInteger.ONE.shiftLeft(255).subtract(BigInteger.ONE));
+            return new Object[]{ r, s, odd };
+        }
         throw new IllegalStateException("Unknown format");
     }
 
@@ -97,10 +111,11 @@ public class signing {
         pair<BigInteger, Boolean> t = wallet.privatekey_decode(privatekey, coin, testnet);
         BigInteger e = t.l;
         boolean compressed = t.r;
-        String fun = coins.attr("signature.hashing", coin, testnet);
+        String fun = coins.attr("signature.hashing", "<none>", coin, testnet);
         byte[] prefix = coins.attr("signature.hashing.prefix", new byte[]{ }, coin, testnet);
         byte[] b;
         switch (fun) {
+            case "<none>": b = bytes.concat(prefix, data); break;
             case "hash256": b = hashing.hash256(bytes.concat(prefix, data)); break;
             case "keccak256": b = hashing.keccak256(bytes.concat(prefix, data)); break;
             case "sha256": b = hashing.sha256(bytes.concat(prefix, data)); break;
@@ -109,6 +124,7 @@ public class signing {
             default: throw new IllegalStateException("Unknown hash function");
         }
         BigInteger h = binint.b2n(b);
+        int h_len = b.length;
         Object[] S;
         String curve = coins.attr("ecc.curve", coin, testnet);
         if (curve.equals("secp256k1")) {
@@ -129,7 +145,7 @@ public class signing {
                 case "sha512": f = hashing::sha512; break;
                 default: throw new IllegalStateException("Unknown hash function");
             }
-            S = ed25519.sgn(e, h, f);
+            S = ed25519.sgn(e, h, f, h_len);
         }
         else {
             throw new IllegalStateException("Unknown curve");
@@ -142,10 +158,11 @@ public class signing {
         BigInteger[] P = t.l;
         boolean compressed = t.r;
         Object[] S = signature_decode(signature, coin, testnet);
-        String fun = coins.attr("signature.hashing", coin, testnet);
+        String fun = coins.attr("signature.hashing", "<none>", coin, testnet);
         byte[] prefix = coins.attr("signature.hashing.prefix", new byte[]{ }, coin, testnet);
         byte[] b;
         switch (fun) {
+            case "<none>": b = bytes.concat(prefix, data); break;
             case "hash256": b = hashing.hash256(bytes.concat(prefix, data)); break;
             case "keccak256": b = hashing.keccak256(bytes.concat(prefix, data)); break;
             case "sha256": b = hashing.sha256(bytes.concat(prefix, data)); break;
@@ -154,6 +171,7 @@ public class signing {
             default: throw new IllegalStateException("Unknown hash function");
         }
         BigInteger h = binint.b2n(b);
+        int h_len = b.length;
         String curve = coins.attr("ecc.curve", coin, testnet);
         if (curve.equals("secp256k1")) {
             return secp256k1.ver(P, h, S);
@@ -171,7 +189,7 @@ public class signing {
                 case "sha512": f = hashing::sha512; break;
                 default: throw new IllegalStateException("Unknown hash function");
             }
-            return ed25519.ver(P, h, S, f);
+            return ed25519.ver(P, h, S, f, h_len);
         }
         else {
             throw new IllegalStateException("Unknown curve");

@@ -70,6 +70,7 @@ public class base58 {
         if (f == null) f = base58::_sub_hash256_0_4;
         byte[] b = decode(w);
         if (b.length < prefix_len + hash_len) throw new IllegalArgumentException("Invalid length");
+        if (hash_len == 0) hash_len = -b.length;
         byte[] h = bytes.sub(b, -hash_len);
         b = bytes.sub(b, 0, -hash_len);
         if (!bytes.equ(h, f.hash(b))) throw new IllegalArgumentException("Invalid hash");
@@ -93,6 +94,9 @@ public class base58 {
 
     static byte[] _sub_hash256_0_4(byte[] b) {
         return bytes.sub(hashing.hash256(b), 0, 4);
+    }
+    static byte[] _sub_securehash_0_4(byte[] b) {
+        return bytes.sub(hashing.securehash(b), 0, 4);
     }
 
 }

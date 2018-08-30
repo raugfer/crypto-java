@@ -63,6 +63,9 @@ public class service {
         if (fmt.equals("liskdatablock")) {
             return fee;
         }
+        if (fmt.equals("wavestx")) {
+            return fee;
+        }
         throw new IllegalArgumentException("Unknown format");
     }
 
@@ -333,6 +336,18 @@ public class service {
             dict fields = new dict();
             fields.put("timestamp", timestamp);
             fields.put("amount", amount);
+            fields.put("recipient", address);
+            byte[] txn = transaction.transaction_encode(fields, coin, testnet);
+            return new pair<>(new byte[][]{ txn }, f);
+        }
+        if (fmt.equals("wavestx")) {
+            String source_address = source_addresses[0];
+            context f = (lookup) -> lookup.call(source_address);
+            BigInteger timestamp = BigInteger.valueOf(System.currentTimeMillis());
+            dict fields = new dict();
+            fields.put("timestamp", timestamp);
+            fields.put("amount", amount);
+            fields.put("fee", fee);
             fields.put("recipient", address);
             byte[] txn = transaction.transaction_encode(fields, coin, testnet);
             return new pair<>(new byte[][]{ txn }, f);

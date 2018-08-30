@@ -92,8 +92,8 @@ public class ed25519 {
         return P;
     }
 
-    public static Object[] sgn(BigInteger e, BigInteger h, hashing.hashfun f) {
-        byte[] b = binint.n2b(h, 32);
+    public static Object[] sgn(BigInteger e, BigInteger h, hashing.hashfun f, int h_len) {
+        byte[] b = binint.n2b(h, h_len);
 
         byte[] h1 = f.hash(binint.n2b(e, 32));
         BigInteger a = binint.b2n(bytes.rev(bytes.sub(h1, 0, 32)));
@@ -112,15 +112,22 @@ public class ed25519 {
 
         BigInteger S = r.add(a.multiply(t)).mod(l);
 
-        return new Object[]{ R, S, null };
+        boolean odd = A.shiftRight(255).and(BigInteger.ONE).equals(BigInteger.ONE);
+
+        return new Object[]{ R, S, odd };
     }
 
-    public static boolean ver(BigInteger[] P, BigInteger h, Object[] o, hashing.hashfun f) {
+    public static boolean ver(BigInteger[] P, BigInteger h, Object[] o, hashing.hashfun f, int h_len) {
         BigInteger R = (BigInteger) o[0];
         BigInteger S = (BigInteger) o[1];
+        Boolean odd = (Boolean) o[3];
+        if (odd != null) {
+            BigInteger x = P[0], y = P[1];
+            P = new BigInteger[]{ fnd(y, odd), y };
+        }
         if (!has(P)) throw new IllegalArgumentException("Invalid point");
         if (S.compareTo(l) >= 0) throw new IllegalArgumentException("Out of range");
-        byte[] b = binint.n2b(h, 32);
+        byte[] b = binint.n2b(h, h_len);
         BigInteger A = enc(P);
         BigInteger[] Q = dec(R);
         if (!has(Q)) throw new IllegalArgumentException("Invalid point");

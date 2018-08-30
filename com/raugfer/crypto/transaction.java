@@ -795,6 +795,37 @@ public class transaction {
             byte[] b6 = signature;
             return bytes.concat(b1, b2, b3, b4, b5, b6);
         }
+        if (fmt.equals("wavestx")) {
+            int txtype = 4;
+            int version = 2;
+            String publickey = fields.get("publickey", null);
+            String asset = fields.get("asset", null);
+            String fee_asset = fields.get("fee_asset", null);
+            BigInteger timestamp = fields.get("timestamp");
+            BigInteger amount = fields.get("amount");
+            BigInteger fee = fields.get("fee");
+            String recipient = fields.get("recipient");
+            String attachment = fields.get("attachment", null);
+            byte[] b_signature = fields.get("signature", new byte[]{ });
+            byte[] b_publickey = publickey != null ? base58.decode(publickey) : new byte[32];
+            byte[] b_asset = asset != null ? bytes.concat(new byte[]{ 1 }, base58.decode(asset)) : new byte[]{ 0 };
+            byte[] b_fee_asset = fee_asset != null ? bytes.concat(new byte[]{ 1 }, base58.decode(fee_asset)) : new byte[]{ 0 };
+            byte[] b_recipient = base58.decode(recipient);
+            byte[] b_attachment = attachment != null ? base58.decode(attachment) : new byte[]{ };
+            byte[] b1 = binint.n2b(BigInteger.valueOf(txtype), 1);
+            byte[] b2 = binint.n2b(BigInteger.valueOf(version), 1);
+            byte[] b3 = b_publickey;
+            byte[] b4 = b_asset;
+            byte[] b5 = b_fee_asset;
+            byte[] b6 = binint.n2b(timestamp, 8);
+            byte[] b7 = binint.n2b(amount, 8);
+            byte[] b8 = binint.n2b(fee, 8);
+            byte[] b9 = b_recipient;
+            byte[] b10 = binint.n2b(BigInteger.valueOf(b_attachment.length), 2);
+            byte[] b11 = b_attachment;
+            byte[] b12 = b_signature;
+            return bytes.concat(bytes.concat(b1, b2, b3, b4, b5, b6), bytes.concat(b7, b8, b9, b10, b11, b12));
+        }
         throw new IllegalStateException("Unknown format");
     }
 
@@ -1269,6 +1300,76 @@ public class transaction {
             assert txn.length == 0;
             return fields;
         }
+        if (fmt.equals("wavestx")) {
+            if (txn.length < 1) throw new IllegalArgumentException("End of input");
+            int txtype = binint.b2n(bytes.sub(txn, 0, 1)).intValue();
+            txn = bytes.sub(txn, 1);
+            if (txtype != 4) throw new IllegalArgumentException("Invalid type");
+            if (txn.length < 1) throw new IllegalArgumentException("End of input");
+            int version = binint.b2n(bytes.sub(txn, 0, 1)).intValue();
+            txn = bytes.sub(txn, 1);
+            if (version != 2) throw new IllegalArgumentException("Invalid version");
+            if (txn.length < 32) throw new IllegalArgumentException("End of input");
+            byte[] b_publickey = bytes.sub(txn, 0, 32);
+            txn = bytes.sub(txn, 32);
+            String publickey = bytes.equ(b_publickey, new byte[32]) ? null : base58.encode(b_publickey);
+            if (txn.length < 1) throw new IllegalArgumentException("End of input");
+            int has_asset = binint.b2n(bytes.sub(txn, 0, 1)).intValue();
+            txn = bytes.sub(txn, 1);
+            if (has_asset > 1) throw new IllegalArgumentException("Invalid asset marker");
+            String asset = null;
+            if (has_asset == 1) {
+                if (txn.length < 32) throw new IllegalArgumentException("End of input");
+                asset = base58.encode(bytes.sub(txn, 0, 32));
+                txn = bytes.sub(txn, 32);
+            }
+            if (txn.length < 1) throw new IllegalArgumentException("End of input");
+            int has_fee_asset = binint.b2n(bytes.sub(txn, 0, 1)).intValue();
+            txn = bytes.sub(txn, 1);
+            if (has_fee_asset > 1) throw new IllegalArgumentException("Invalid asset marker");
+            String fee_asset = null;
+            if (has_fee_asset == 1) {
+                if (txn.length < 32) throw new IllegalArgumentException("End of input");
+                fee_asset = base58.encode(bytes.sub(txn, 0, 32));
+                txn = bytes.sub(txn, 32);
+            }
+            if (txn.length < 8) throw new IllegalArgumentException("End of input");
+            BigInteger timestamp = binint.b2n(bytes.sub(txn, 0, 8));
+            txn = bytes.sub(txn, 8);
+            if (txn.length < 8) throw new IllegalArgumentException("End of input");
+            BigInteger amount = binint.b2n(bytes.sub(txn, 0, 8));
+            txn = bytes.sub(txn, 8);
+            if (txn.length < 8) throw new IllegalArgumentException("End of input");
+            BigInteger fee = binint.b2n(bytes.sub(txn, 0, 8));
+            txn = bytes.sub(txn, 8);
+            if (txn.length < 26) throw new IllegalArgumentException("End of input");
+            String recipient = base58.encode(bytes.sub(txn, 0, 26));
+            txn = bytes.sub(txn, 26);
+            if (txn.length < 2) throw new IllegalArgumentException("End of input");
+            int size = binint.b2n(bytes.sub(txn, 0, 2)).intValue();
+            txn = bytes.sub(txn, 2);
+            if (txn.length < size) throw new IllegalArgumentException("End of input");
+            String attachment = base58.encode(bytes.sub(txn, 0, size));
+            txn = bytes.sub(txn, size);
+            byte[] signature = null;
+            if (txn.length != 0) {
+                if (txn.length < 64) throw new IllegalArgumentException("End of input");
+                signature = bytes.sub(txn, 0, 64);
+                txn = bytes.sub(txn, 64);
+                assert txn.length == 0;
+            }
+            dict fields = new dict();
+            if (publickey != null) fields.put("publickey", publickey);
+            if (asset != null) fields.put("asset", asset);
+            if (fee_asset != null) fields.put("fee_asset", fee_asset);
+            fields.put("timestamp", timestamp);
+            fields.put("amount", amount);
+            fields.put("fee", fee);
+            fields.put("recipient", recipient);
+            if (attachment.length() > 0) fields.put("attachment", attachment);
+            if (signature != null) fields.put("signature", signature);
+            return fields;
+        }
         throw new IllegalStateException("Unknown format");
     }
 
@@ -1292,6 +1393,7 @@ public class transaction {
         switch (fmt) {
             case "hex": return binint.b2h(b);
             case "decimal": return binint.b2n(b).toString();
+            case "base58": return base58.encode(b);
             default: throw new IllegalStateException("Unknown format");
         }
     }
@@ -1638,6 +1740,17 @@ public class transaction {
             return transaction_encode(fields, coin, testnet);
         }
         if (fmt.equals("liskdatablock")) {
+            dict fields = transaction_decode(txn, coin, testnet);
+            if (fields.has("signature")) fields.del("signature");
+            String privatekey = (String) params;
+            String publickey = wallet.publickey_from_privatekey(privatekey, coin, testnet);
+            fields.put("publickey", publickey);
+            txn = transaction_encode(fields, coin, testnet);
+            byte[] signature = signing.signature_create(privatekey, txn, null, coin, testnet);
+            fields.put("signature", signature);
+            return transaction_encode(fields, coin, testnet);
+        }
+        if (fmt.equals("wavestx")) {
             dict fields = transaction_decode(txn, coin, testnet);
             if (fields.has("signature")) fields.del("signature");
             String privatekey = (String) params;

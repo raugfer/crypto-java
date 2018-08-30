@@ -32,6 +32,8 @@ public class hashing {
 
     public static byte[] blake2b(byte[] message, byte[] person, int size) { return blake2b.hash(message, new byte[]{ }, new byte[]{ }, person, size); }
 
+    public static byte[] securehash(byte[] message) { return keccak256(blake2b(message, 32)); }
+
     public static byte[] hmac(byte[] k, byte[] b, hashfun f, int size) {
         if (k.length > size) k = f.hash(k);
         if (k.length < size) {

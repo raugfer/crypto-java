@@ -388,6 +388,42 @@ public class coins {
 
     static {
         dict attrs = new dict();
+        attrs.put("ecc.curve", "ed25519");
+        attrs.put("address.base58.check", "securehash:4");
+        attrs.put("privatekey.format", "base58");
+        attrs.put("privatekey.reverse", true);
+        attrs.put("privatekey.mini", false);
+        attrs.put("publickey.format", "base58");
+        attrs.put("publickey.curve25519", true);
+        attrs.put("address.format", "base58");
+        attrs.put("address.hashing", "securehash");
+        attrs.put("address.hashing.reverse", true);
+        attrs.put("address.mode", "account");
+        attrs.put("address.base58.prefix", (_testnetfun) (testnet -> testnet
+                ? new byte[]{ (byte)0x01, (byte)'T' }
+                : new byte[]{ (byte)0x01, (byte)'W' }
+        ));
+        attrs.put("xprivatekey.base58.prefix", (_testnetfun) (testnet -> testnet
+                ? new byte[]{ (byte)0x04, (byte)0x35, (byte)0x83, (byte)0x94 }
+                : new byte[]{ (byte)0x04, (byte)0x88, (byte)0xad, (byte)0xe4 }
+        ));
+        attrs.put("xpublickey.base58.prefix", (_testnetfun) (testnet -> testnet
+                ? new byte[]{ (byte)0x04, (byte)0x35, (byte)0x87, (byte)0xcf }
+                : new byte[]{ (byte)0x04, (byte)0x88, (byte)0xb2, (byte)0x1e }
+        ));
+        attrs.put("hdwallet.coin_type", 5741564);
+        attrs.put("transaction.format", "wavestx");
+        attrs.put("transaction.hashing", "blake2b256");
+        attrs.put("transaction.id.format", "base58");
+        attrs.put("signature.format", "blex");
+        attrs.put("confirmations", 20);
+        attrs.put("block.time", 30);
+        attrs.put("decimals", 8);
+        coins.put("waves", attrs);
+    }
+
+    static {
+        dict attrs = new dict();
         attrs.put("overloads", "bitcoin");
         attrs.put("privatekey.base58.prefix", (_testnetfun) (testnet -> testnet ? new byte[]{ (byte)0xef } : new byte[]{ (byte)0x80 }));
         attrs.put("address.base58.prefix", (_testnetfun) (testnet -> testnet ? new byte[]{ (byte)0x1d, (byte)0x25 } : new byte[]{ (byte)0x1c, (byte)0xb8 }));

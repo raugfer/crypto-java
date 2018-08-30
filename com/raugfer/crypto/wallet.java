@@ -5,15 +5,18 @@ import java.math.BigInteger;
 public class wallet {
 
     private static String base32_encode(byte[] b, String kind, String coin, boolean testnet) {
-        String fun = coins.attr("base32.check", coin, testnet);
+        String fun = coins.attr("base32.check", "<none>", coin, testnet);
+        fun = coins.attr(kind + ".base32.check", fun, coin, testnet);
         hashing.hashfun f;
+        if (fun.equals("<none>")) f = (t) -> new byte[]{};
+        else
         if (fun.equals("crc16:2")) f = base32::_rev_crc16;
         else
         if (fun.equals("blake2b:5")) f = base32::_rev_blake2b_5;
         else {
             throw new IllegalStateException("Unknown hashing function");
         }
-        byte[] prefix = coins.attr(kind + ".base32.prefix", coin, testnet);
+        byte[] prefix = coins.attr(kind + ".base32.prefix", new byte[]{ }, coin, testnet);
         String w = base32.check_encode(b, prefix, f);
         String digits = coins.attr("base32.digits", base32.digits, coin, testnet);
         w = base32.translate(w, null, digits);
@@ -21,9 +24,15 @@ public class wallet {
     }
 
     private static byte[] base32_decode(String w, String kind, String coin, boolean testnet) {
-        String fun = coins.attr("base32.check", coin, testnet);
+        String fun = coins.attr("base32.check", "<none>", coin, testnet);
+        fun = coins.attr(kind + ".base32.check", fun, coin, testnet);
         int hash_len;
         hashing.hashfun f;
+        if (fun.equals("<none>")) {
+            hash_len = 0;
+            f = (t) -> new byte[]{};
+        }
+        else
         if (fun.equals("crc16:2")) {
             hash_len = 2;
             f = base32::_rev_crc16;
@@ -38,7 +47,7 @@ public class wallet {
         }
         String digits = coins.attr("base32.digits", base32.digits, coin, testnet);
         w = base32.translate(w, digits, null);
-        byte[] prefix = coins.attr(kind + ".base32.prefix", coin, testnet);
+        byte[] prefix = coins.attr(kind + ".base32.prefix", new byte[]{ }, coin, testnet);
         pair<byte[], byte[]> t = base32.check_decode(w, prefix.length, hash_len, f);
         byte[] b = t.l, p = t.r;
         if (!bytes.equ(p, prefix)) throw new IllegalArgumentException("Invalid prefix");
@@ -46,10 +55,18 @@ public class wallet {
     }
 
     private static String base58_encode(byte[] b, String kind, String coin, boolean testnet) {
-        String fun = coins.attr("base58.check", coin, testnet);
-        hashing.hashfun f = null;
+        String fun = coins.attr("base58.check", "<none>", coin, testnet);
+        fun = coins.attr(kind + ".base58.check", fun, coin, testnet);
+        hashing.hashfun f;
+        if (fun.equals("<none>")) f = (t) -> new byte[]{ };
+        else
         if (fun.equals("hash256:4")) f = base58::_sub_hash256_0_4;
-        byte[] prefix = coins.attr(kind + ".base58.prefix", coin, testnet);
+        else
+        if (fun.equals("securehash:4")) f = base58::_sub_securehash_0_4;
+        else {
+            throw new IllegalStateException("Unknown hashing function");
+        }
+        byte[] prefix = coins.attr(kind + ".base58.prefix", new byte[]{ }, coin, testnet);
         String w = base58.check_encode(b, prefix, f);
         String digits = coins.attr("base58.digits", base58.digits, coin, testnet);
         w = base58.translate(w, null, digits);
@@ -57,16 +74,25 @@ public class wallet {
     }
 
     private static byte[] base58_decode(String w, String kind, String coin, boolean testnet) {
-        String fun = coins.attr("base58.check", coin, testnet);
+        String fun = coins.attr("base58.check", "<none>", coin, testnet);
+        fun = coins.attr(kind + ".base58.check", fun, coin, testnet);
         int hash_len = 0;
-        hashing.hashfun f = null;
+        hashing.hashfun f;
         if (fun.equals("hash256:4")) {
             hash_len = 4;
             f = base58::_sub_hash256_0_4;
         }
+        else
+        if (fun.equals("securehash:4")) {
+            hash_len = 4;
+            f = base58::_sub_securehash_0_4;
+        }
+        else {
+            throw new IllegalStateException("Unknown hashing function");
+        }
         String digits = coins.attr("base58.digits", base58.digits, coin, testnet);
         w = base58.translate(w, digits, null);
-        byte[] prefix = coins.attr(kind + ".base58.prefix", coin, testnet);
+        byte[] prefix = coins.attr(kind + ".base58.prefix", new byte[]{ }, coin, testnet);
         pair<byte[], byte[]> t = base58.check_decode(w, prefix.length, hash_len, f);
         byte[] b = t.l, p = t.r;
         if (!bytes.equ(p, prefix)) throw new IllegalArgumentException("Invalid prefix");
@@ -95,6 +121,8 @@ public class wallet {
         else {
             throw new IllegalStateException("Unknown curve");
         }
+        boolean reverse = coins.attr("privatekey.reverse", false, coin, testnet);
+        if (reverse) b = bytes.rev(b);
         String fmt = coins.attr("privatekey.format", coin, testnet);
         switch (fmt) {
             case "hex": return binint.n2h(e, 32);
@@ -107,11 +135,13 @@ public class wallet {
 
     public static pair<BigInteger, Boolean> privatekey_decode(String w, String coin, boolean testnet) {
         String fmt = coins.attr("privatekey.format", coin, testnet);
+        boolean reverse = coins.attr("privatekey.reverse", false, coin, testnet);
         BigInteger e = null;
         byte[] b;
         boolean compressed;
         if (fmt.equals("hex")) {
             b = binint.h2b(w);
+            if (reverse) b = bytes.rev(b);
             if (b.length != 32) throw new IllegalArgumentException("Invalid length");
             e = binint.b2n(b);
             compressed = false;
@@ -136,6 +166,7 @@ public class wallet {
         else {
             throw new IllegalStateException("Unknown format");
         }
+        if (reverse) b = bytes.rev(b);
         String curve = coins.attr("ecc.curve", coin, testnet);
         if (curve.equals("secp256k1")) {
             if (compressed) {
@@ -281,7 +312,9 @@ public class wallet {
         }
         else
         if (curve.equals("ed25519")) {
-            BigInteger p = ed25519.enc(P);
+            BigInteger x = P[0], y = P[1];
+            boolean use_curve = coins.attr("publickey.curve25519", false, coin, testnet);
+            BigInteger p = use_curve ? curve25519.dec_ed25519(y) : ed25519.enc(P);
             b = bytes.rev(binint.n2b(p, 32));
         }
         else {
@@ -395,7 +428,8 @@ public class wallet {
             }
             if (b.length != 32) throw new IllegalArgumentException("Invalid length");
             BigInteger p = binint.b2n(bytes.rev(b));
-            P = ed25519.dec(p);
+            boolean use_curve = coins.attr("publickey.curve25519", false, coin, testnet);
+            P = ed25519.dec(use_curve ? curve25519.enc_ed25519(p) : p);
         }
         else {
             throw new IllegalStateException("Unknown curve");
@@ -436,7 +470,9 @@ public class wallet {
         }
         else
         if (curve.equals("ed25519")) {
-            BigInteger p = ed25519.enc(P);
+            BigInteger x = P[0], y = P[1];
+            boolean use_curve = coins.attr("publickey.curve25519", false, coin, testnet);
+            BigInteger p = use_curve ? curve25519.dec_ed25519(y) : ed25519.enc(P);
             b = bytes.rev(binint.n2b(p, 32));
         }
         else {
@@ -456,6 +492,7 @@ public class wallet {
             case "sha256": b = hashing.sha256(b); break;
             case "hash160": b = hashing.hash160(b); break;
             case "keccak256": b = hashing.keccak256(b); break;
+            case "securehash": b = hashing.securehash(b); break;
             default: throw new IllegalStateException("Unknown hash function");
         }
         boolean reverse = coins.attr("address.hashing.reverse", false, coin, testnet);
@@ -467,6 +504,7 @@ public class wallet {
 
     public static String address_encode(BigInteger h, String kind, String coin, boolean testnet) {
         String[] kinds = coins.attr("address.kinds", new String[]{ "address" }, coin, testnet);
+        boolean reverse = coins.attr("address.hashing.reverse", false, coin, testnet);
         int bits = coins.attr("address.bits", 160, coin, testnet);
         boolean found = false;
         for (String k: kinds) {
@@ -478,11 +516,12 @@ public class wallet {
         if (!found) throw new IllegalArgumentException("Invalid kind");
         if (h.compareTo(BigInteger.ZERO) < 0 || h.compareTo(BigInteger.ONE.shiftLeft(bits)) >= 0) throw new IllegalArgumentException("Out of range");
         byte[] b = binint.n2b(h, bits / 8);
+        if (reverse) b = bytes.rev(b);
         String fmt = coins.attr("address.format", coin, testnet);
         String w;
         switch (fmt) {
             case "decimal":
-                w = h.toString();
+                w = binint.b2n(b).toString();
                 break;
             case "hexmix":
                 String s = binint.b2h(b);
@@ -512,6 +551,7 @@ public class wallet {
 
     public static pair<BigInteger, String> address_decode(String w, String coin, boolean testnet) {
         String[] kinds = coins.attr("address.kinds", new String[]{ "address" }, coin, testnet);
+        boolean reverse = coins.attr("address.hashing.reverse", false, coin, testnet);
         int bits = coins.attr("address.bits", 160, coin, testnet);
         String prefix = coins.attr("address.prefix", "", coin, testnet);
         String suffix = coins.attr("address.suffix", "", coin, testnet);
@@ -526,12 +566,16 @@ public class wallet {
         String fmt = coins.attr("address.format", coin, testnet);
         switch (fmt) {
             case "decimal":
-                return new pair<>(new BigInteger(w), kinds[0]);
+                BigInteger h = new BigInteger(w);
+                if (h.compareTo(BigInteger.ZERO) < 0 || h.compareTo(BigInteger.ONE.shiftLeft(bits)) >= 0) throw new IllegalArgumentException("Out of range");
+                byte[] b = binint.n2b(h, bits / 8);
+                if (reverse) b = bytes.rev(b);
+                return new pair<>(binint.b2n(b), kinds[0]);
             case "hexmix":
                 s = w;
                 boolean checksum = !s.equals(s.toUpperCase()) && !s.equals(s.toLowerCase());
                 if (checksum) {
-                    byte[] b = s.toLowerCase().getBytes();
+                    b = s.toLowerCase().getBytes();
                     String hex = binint.b2h(hashing.keccak256(b));
                     StringBuilder sb = new StringBuilder();
                     for (int i = 0; i < s.length(); i++) {
@@ -542,30 +586,31 @@ public class wallet {
                     }
                     if (!s.equals(sb.toString())) throw new IllegalArgumentException("Invalid hash");
                 }
-                byte[] bin = binint.h2b(s);
-                if (bin.length != bits / 8) throw new IllegalArgumentException("Invalid length");
-                return new pair<>(binint.b2n(bin), kinds[0]);
+                b = binint.h2b(s);
+                if (b.length != bits / 8) throw new IllegalArgumentException("Invalid length");
+                if (reverse) b = bytes.rev(b);
+                return new pair<>(binint.b2n(b), kinds[0]);
             case "base32":
                 for (String kind : kinds) {
-                    byte[] b;
                     try {
                         b = base32_decode(w, kind, coin, testnet);
                     } catch (Exception e) {
                         continue;
                     }
                     if (b.length != bits/8) throw new IllegalArgumentException("Invalid length");
+                    if (reverse) b = bytes.rev(b);
                     return new pair<>(binint.b2n(b), kind);
                 }
                 throw new IllegalArgumentException("Invalid prefix");
             case "base58":
                 for (String kind : kinds) {
-                    byte[] b;
                     try {
                         b = base58_decode(w, kind, coin, testnet);
                     } catch (Exception e) {
                         continue;
                     }
                     if (b.length != bits/8) throw new IllegalArgumentException("Invalid length");
+                    if (reverse) b = bytes.rev(b);
                     return new pair<>(binint.b2n(b), kind);
                 }
                 throw new IllegalArgumentException("Invalid prefix");
