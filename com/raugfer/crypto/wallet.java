@@ -78,6 +78,11 @@ public class wallet {
         fun = coins.attr(kind + ".base58.check", fun, coin, testnet);
         int hash_len = 0;
         hashing.hashfun f;
+        if (fun.equals("<none>")) {
+            hash_len = 0;
+            f = (t) -> new byte[]{ };
+        }
+        else
         if (fun.equals("hash256:4")) {
             hash_len = 4;
             f = base58::_sub_hash256_0_4;
