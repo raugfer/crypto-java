@@ -77,6 +77,20 @@ public class coins {
     static {
         dict attrs = new dict();
         attrs.put("overloads", "bitcoin");
+        attrs.put("privatekey.base58.prefix", (_testnetfun) (testnet -> testnet ? new byte[]{ (byte)0xfe } : new byte[]{ (byte)0x80 }));
+        attrs.put("address.base58.prefix", (_testnetfun) (testnet -> testnet ? new byte[]{ (byte)0x7e } : new byte[]{ (byte)0x1e }));
+        attrs.put("script.base58.prefix", (_testnetfun) (testnet -> testnet ? new byte[]{ (byte)0xc4 } : new byte[]{ (byte)0x05 }));
+        attrs.put("script2.base58.prefix", (_testnetfun) (testnet -> testnet ? new byte[]{ (byte)0x8c } : new byte[]{ (byte)0x3f }));
+        attrs.put("hdwallet.coin_type", 20);
+        attrs.put("confirmations", 400);
+        attrs.put("block.time", 15);
+        attrs.put("default_fee", 64000);
+        coins.put("digibyte", attrs);
+    }
+
+    static {
+        dict attrs = new dict();
+        attrs.put("overloads", "bitcoin");
         attrs.put("privatekey.base58.prefix", (_testnetfun) (testnet -> testnet ? new byte[]{ (byte)0xf1 } : new byte[]{ (byte)0x9e }));
         attrs.put("address.base58.prefix", (_testnetfun) (testnet -> testnet ? new byte[]{ (byte)0x71 } : new byte[]{ (byte)0x1e }));
         attrs.put("script.base58.prefix", (_testnetfun) (testnet -> testnet ? new byte[]{ (byte)0xc4 } : new byte[]{ (byte)0x16 }));
