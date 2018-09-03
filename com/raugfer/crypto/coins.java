@@ -560,6 +560,15 @@ public class coins {
         coins.put("status", attrs);
     }
 
+    static {
+        dict attrs = new dict();
+        attrs.put("overloads", "ethereum");
+        attrs.put("decimals", 12);
+        attrs.put("transfer.gaslimit", 150000);
+        attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x36cb48e26fd55dab1c225ed40254fa0cbdb60c6d" : "0x05f4a42e251f2d52b8ed15e9fedaacfcef1fad27"));
+        coins.put("zilliqa", attrs);
+    }
+
     public static <A> A attr(String name, String coin) {
         return attr(name, null, coin, false);
     }
