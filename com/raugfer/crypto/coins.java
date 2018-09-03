@@ -77,6 +77,40 @@ public class coins {
     static {
         dict attrs = new dict();
         attrs.put("overloads", "bitcoin");
+        attrs.put("base58.check", "blake256:4");
+        attrs.put("privatekey.base58.check", "blake1s:4");
+        attrs.put("privatekey.compressed", false);
+        attrs.put("publickey.format", "base58");
+        attrs.put("publickey.compressed", true);
+        attrs.put("publickey.compressed.prefixes", new byte[][]{ new byte[]{ (byte)0x00 }, new byte[]{ (byte)0x80 } });
+        attrs.put("address.hashing", "blake160");
+        attrs.put("privatekey.base58.prefix", (_testnetfun) (testnet -> testnet ? new byte[]{ (byte)0x23, (byte)0x0e, (byte)0x00 } : new byte[]{ (byte)0x22, (byte)0xde, (byte)0x00 }));
+        attrs.put("publickey.base58.prefix", (_testnetfun) (testnet -> testnet ? new byte[]{ (byte)0x28, (byte)0xf7 } : new byte[]{ (byte)0x13, (byte)0x86 }));
+        attrs.put("address.base58.prefix", (_testnetfun) (testnet -> testnet ? new byte[]{ (byte)0x0f, (byte)0x21 } : new byte[]{ (byte)0x07, (byte)0x3f }));
+        attrs.put("scrip.base58.prefix", (_testnetfun) (testnet -> testnet ? new byte[]{ (byte)0x0e, (byte)0xfc } : new byte[]{ (byte)0x07, (byte)0x1a }));
+        attrs.put("xprivatekey.base58.check", "blake256:4");
+        attrs.put("xpublickey.base58.check", "blake256:4");
+        attrs.put("xprivatekey.base58.prefix", (_testnetfun) (testnet -> testnet
+                ? new byte[]{ (byte)0x04, (byte)0x35, (byte)0x83, (byte)0x97 }
+                : new byte[]{ (byte)0x02, (byte)0xfd, (byte)0xa4, (byte)0xe8 }
+        ));
+        attrs.put("xpublickey.base58.prefix", (_testnetfun) (testnet -> testnet
+                ? new byte[]{ (byte)0x04, (byte)0x35, (byte)0x87, (byte)0xd1 }
+                : new byte[]{ (byte)0x02, (byte)0xfd, (byte)0xa9, (byte)0x26 }
+        ));
+        attrs.put("hdwallet.coin_type", 42);
+        attrs.put("transaction.format", "dcrinout");
+        attrs.put("transaction.hashing", "blake1s");
+        attrs.put("signature.hashing", "blake1s");
+        attrs.put("confirmations", 6);
+        attrs.put("block.time", (_testnetfun) (testnet -> testnet ? 2 * 60 : 5 * 60));
+        coins.put("decred", attrs);
+    }
+
+    static {
+        dict attrs = new dict();
+        attrs.put("overloads", "bitcoin");
+        attrs.put("address.kinds", new String[]{ "address", "script", "script2" });
         attrs.put("privatekey.base58.prefix", (_testnetfun) (testnet -> testnet ? new byte[]{ (byte)0xfe } : new byte[]{ (byte)0x80 }));
         attrs.put("address.base58.prefix", (_testnetfun) (testnet -> testnet ? new byte[]{ (byte)0x7e } : new byte[]{ (byte)0x1e }));
         attrs.put("script.base58.prefix", (_testnetfun) (testnet -> testnet ? new byte[]{ (byte)0xc4 } : new byte[]{ (byte)0x05 }));

@@ -62,6 +62,10 @@ public class wallet {
         else
         if (fun.equals("hash256:4")) f = base58::_sub_hash256_0_4;
         else
+        if (fun.equals("blake1s:4")) f = base58::_sub_blake1s_0_4;
+        else
+        if (fun.equals("blake256:4")) f = base58::_sub_blake256_0_4;
+        else
         if (fun.equals("securehash:4")) f = base58::_sub_securehash_0_4;
         else {
             throw new IllegalStateException("Unknown hashing function");
@@ -76,7 +80,7 @@ public class wallet {
     private static byte[] base58_decode(String w, String kind, String coin, boolean testnet) {
         String fun = coins.attr("base58.check", "<none>", coin, testnet);
         fun = coins.attr(kind + ".base58.check", fun, coin, testnet);
-        int hash_len = 0;
+        int hash_len;
         hashing.hashfun f;
         if (fun.equals("<none>")) {
             hash_len = 0;
@@ -86,6 +90,16 @@ public class wallet {
         if (fun.equals("hash256:4")) {
             hash_len = 4;
             f = base58::_sub_hash256_0_4;
+        }
+        else
+        if (fun.equals("blake1s:4")) {
+            hash_len = 4;
+            f = base58::_sub_blake1s_0_4;
+        }
+        else
+        if (fun.equals("blake256:4")) {
+            hash_len = 4;
+            f = base58::_sub_blake256_0_4;
         }
         else
         if (fun.equals("securehash:4")) {
@@ -288,13 +302,14 @@ public class wallet {
 
     public static String publickey_encode(BigInteger[] P, boolean compressed, String coin, boolean testnet) {
         compressed = coins.attr("publickey.compressed", compressed, coin, testnet);
+        byte[][] prefixes = coins.attr("publickey.compressed.prefixes", new byte[][]{ new byte[]{ (byte)0x02 }, new byte[]{ (byte)0x03 } }, coin, testnet);
         String curve = coins.attr("ecc.curve", coin, testnet);
         byte[] b;
         if (curve.equals("secp256k1")) {
             pair<BigInteger, Boolean> t = secp256k1.enc(P);
             BigInteger p = t.l;
             boolean odd = t.r;
-            byte[] prefix = odd ? new byte[]{ (byte)0x03 } : new byte[]{ (byte)0x02 };
+            byte[] prefix = prefixes[odd ? 1 : 0];
             b = bytes.concat(prefix, binint.n2b(p, 32));
             if (!compressed) {
                 BigInteger x = P[0], y = P[1];
@@ -307,7 +322,7 @@ public class wallet {
             pair<BigInteger, Boolean> t = nist256p1.enc(P);
             BigInteger p = t.l;
             boolean odd = t.r;
-            byte[] prefix = odd ? new byte[]{ (byte)0x03 } : new byte[]{ (byte)0x02 };
+            byte[] prefix = prefixes[odd ? 1 : 0];
             b = bytes.concat(prefix, binint.n2b(p, 32));
             if (!compressed) {
                 BigInteger x = P[0], y = P[1];
@@ -369,6 +384,7 @@ public class wallet {
         else {
             throw new IllegalStateException("Unkown curve");
         }
+        byte[][] prefixes = coins.attr("publickey.compressed.prefixes", new byte[][]{ new byte[]{ (byte)0x02 }, new byte[]{ (byte)0x03 } }, coin, testnet);
         String curve = coins.attr("ecc.curve", coin, testnet);
         if (curve.equals("secp256k1")) {
             if (compressed) {
@@ -386,14 +402,14 @@ public class wallet {
                 pair<BigInteger, Boolean> t = secp256k1.enc(P);
                 BigInteger p = t.l;
                 boolean odd = t.r;
-                byte[] prefix = odd ? new byte[]{ (byte)0x03 } : new byte[]{ (byte)0x02 };
+                byte[] prefix = prefixes[odd ? 1 : 0];
                 b = bytes.concat(prefix, binint.n2b(p, 32));
             }
             if (b.length != 33) throw new IllegalArgumentException("Invalid length");
             byte[] prefix = bytes.sub(b, 0, 1);
             b = bytes.sub(b, 1);
-            if (!bytes.equ(prefix, new byte[]{ (byte)0x02 }) && !bytes.equ(prefix, new byte[]{ (byte)0x03 })) throw new IllegalArgumentException("Invalid prefix");
-            boolean odd = !bytes.equ(prefix, new byte[]{ (byte)0x02 });
+            if (!bytes.equ(prefix, prefixes[0]) && !bytes.equ(prefix, prefixes[1])) throw new IllegalArgumentException("Invalid prefix");
+            boolean odd = bytes.equ(prefix, prefixes[1]);
             BigInteger p = binint.b2n(b);
             P = secp256k1.dec(p, odd);
         }
@@ -414,14 +430,14 @@ public class wallet {
                 pair<BigInteger, Boolean> t = nist256p1.enc(P);
                 BigInteger p = t.l;
                 boolean odd = t.r;
-                byte[] prefix = odd ? new byte[]{ (byte)0x03 } : new byte[]{ (byte)0x02 };
+                byte[] prefix = prefixes[odd ? 1 : 0];
                 b = bytes.concat(prefix, binint.n2b(p, 32));
             }
             if (b.length != 33) throw new IllegalArgumentException("Invalid length");
             byte[] prefix = bytes.sub(b, 0, 1);
             b = bytes.sub(b, 1);
-            if (!bytes.equ(prefix, new byte[]{ (byte)0x02 }) && !bytes.equ(prefix, new byte[]{ (byte)0x03 })) throw new IllegalArgumentException("Invalid prefix");
-            boolean odd = !bytes.equ(prefix, new byte[]{ (byte)0x02 });
+            if (!bytes.equ(prefix, prefixes[0]) && !bytes.equ(prefix, prefixes[1])) throw new IllegalArgumentException("Invalid prefix");
+            boolean odd = bytes.equ(prefix, prefixes[1]);
             BigInteger p = binint.b2n(b);
             P = nist256p1.dec(p, odd);
         }
@@ -496,6 +512,7 @@ public class wallet {
             case "identity": break;
             case "sha256": b = hashing.sha256(b); break;
             case "hash160": b = hashing.hash160(b); break;
+            case "blake160": b = hashing.blake160(b); break;
             case "keccak256": b = hashing.keccak256(b); break;
             case "securehash": b = hashing.securehash(b); break;
             default: throw new IllegalStateException("Unknown hash function");

@@ -29,12 +29,35 @@ public class hdwallet {
         byte[] privatekey = binint.n2b(e, 32);
         byte[] t = bytes.concat(b_depth, b_fingerprint, b_child, chaincode, prefix, privatekey);
         byte[] version = coins.attr("xprivatekey.base58.prefix", coin, testnet);
-        return base58.check_encode(t, version);
+        String fun = coins.attr("xprivatekey.base58.check", "hash256:4", coin, testnet);
+        hashing.hashfun f;
+        if (fun.equals("hash256:4")) f = base58::_sub_hash256_0_4;
+        else
+        if (fun.equals("blake256:4")) f = base58::_sub_blake256_0_4;
+        else {
+            throw new IllegalStateException("Unknown hashing function");
+        }
+        return base58.check_encode(t, version, f);
     }
 
     public static Object[] xprivatekey_decode(String w, String coin, boolean testnet) {
         byte[] version = coins.attr("xprivatekey.base58.prefix", coin, testnet);
-        pair<byte[], byte[]> t = base58.check_decode(w, version.length);
+        String fun = coins.attr("xprivatekey.base58.check", "hash256:4", coin, testnet);
+        int hash_len;
+        hashing.hashfun f;
+        if (fun.equals("hash256:4")) {
+            hash_len = 4;
+            f = base58::_sub_hash256_0_4;
+        }
+        else
+        if (fun.equals("blake256:4")) {
+            hash_len = 4;
+            f = base58::_sub_blake256_0_4;
+        }
+        else {
+            throw new IllegalStateException("Unknown hashing function");
+        }
+        pair<byte[], byte[]> t = base58.check_decode(w, version.length, hash_len, f);
         byte[] b = t.l, v = t.r;
         if (!bytes.equ(v, version)) throw new IllegalArgumentException("Invalid prefix");
         if (b.length != 74) throw new IllegalArgumentException("Invalid length");
@@ -124,12 +147,35 @@ public class hdwallet {
         }
         byte[] t = bytes.concat(b_depth, b_fingerprint, b_child, chaincode, prefix, publickey);
         byte[] version = coins.attr("xpublickey.base58.prefix", coin, testnet);
-        return base58.check_encode(t, version);
+        String fun = coins.attr("xpublickey.base58.check", "hash256:4", coin, testnet);
+        hashing.hashfun f;
+        if (fun.equals("hash256:4")) f = base58::_sub_hash256_0_4;
+        else
+        if (fun.equals("blake256:4")) f = base58::_sub_blake256_0_4;
+        else {
+            throw new IllegalStateException("Unknown hashing function");
+        }
+        return base58.check_encode(t, version, f);
     }
 
     public static Object[] xpublickey_decode(String w, String coin, boolean testnet) {
         byte[] version = coins.attr("xpublickey.base58.prefix", coin, testnet);
-        pair<byte[], byte[]> t = base58.check_decode(w, version.length);
+        String fun = coins.attr("xprivatekey.base58.check", "hash256:4", coin, testnet);
+        int hash_len;
+        hashing.hashfun f;
+        if (fun.equals("hash256:4")) {
+            hash_len = 4;
+            f = base58::_sub_hash256_0_4;
+        }
+        else
+        if (fun.equals("blake256:4")) {
+            hash_len = 4;
+            f = base58::_sub_blake256_0_4;
+        }
+        else {
+            throw new IllegalStateException("Unknown hashing function");
+        }
+        pair<byte[], byte[]> t = base58.check_decode(w, version.length, hash_len, f);
         byte[] b = t.l, v = t.r;
         if (!bytes.equ(v, version)) throw new IllegalArgumentException("Invalid prefix");
         if (b.length != 74) throw new IllegalArgumentException("Invalid length");

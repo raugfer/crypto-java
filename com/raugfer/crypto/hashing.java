@@ -8,6 +8,10 @@ public class hashing {
 
     public static byte[] hash256(byte[] message) { return sha256(sha256(message)); }
 
+    public static byte[] blake160(byte[] message) { return ripemd160(blake1s(message)); }
+
+    public static byte[] blake256(byte[] message) { return blake1s(blake1s(message)); }
+
     public static byte[] ripemd160(byte[] message) { return ripemd160(message, false); }
 
     public static byte[] ripemd160(byte[] message, boolean compressed) { return ripemd160.hash(message, compressed); }
@@ -25,6 +29,12 @@ public class hashing {
     public static byte[] keccak256(byte[] message) { return keccak256(message, false); }
 
     public static byte[] keccak256(byte[] message, boolean compressed) { return keccak256.hash(message, compressed); }
+
+    public static byte[] blake1s(byte[] message) { return blake1s.hash(message); }
+
+    public static byte[] blake1s(byte[] message, int size) { return blake1s.hash(message, new byte[]{ }, size); }
+
+    public static byte[] blake1s(byte[] message, byte[] key, int size) { return blake1s.hash(message, key, size); }
 
     public static byte[] blake2b(byte[] message) { return blake2b.hash(message); }
 

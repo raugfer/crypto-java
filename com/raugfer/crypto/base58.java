@@ -95,6 +95,12 @@ public class base58 {
     static byte[] _sub_hash256_0_4(byte[] b) {
         return bytes.sub(hashing.hash256(b), 0, 4);
     }
+    static byte[] _sub_blake1s_0_4(byte[] b) {
+        return bytes.sub(hashing.blake1s(b), 0, 4);
+    }
+    static byte[] _sub_blake256_0_4(byte[] b) {
+        return bytes.sub(hashing.blake256(b), 0, 4);
+    }
     static byte[] _sub_securehash_0_4(byte[] b) {
         return bytes.sub(hashing.securehash(b), 0, 4);
     }

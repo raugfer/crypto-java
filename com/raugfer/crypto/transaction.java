@@ -432,6 +432,47 @@ public class transaction {
         return bytes.concat(b1, b2, b3);
     }
 
+    private static byte[] dcrinout_input_encode(dict fields, BigInteger default_sequence) {
+        String txnid = fields.get("txnid");
+        BigInteger index = fields.get("index", BigInteger.ZERO);
+        BigInteger tree = fields.get("tree", BigInteger.ZERO);
+        BigInteger sequence = fields.get("sequence", default_sequence);
+        byte[] b1 = bytes.rev(binint.h2b(txnid));
+        byte[] b2 = int32(index);
+        byte[] b3 = int8(tree);
+        byte[] b4 = int32(sequence);
+        return bytes.concat(b1, b2, b3, b4);
+    }
+
+    private static byte[] dcrinout_output_encode(dict fields, String coin, boolean testnet) {
+        BigInteger amount = fields.get("amount", BigInteger.ZERO);
+        BigInteger version = fields.get("version", BigInteger.ZERO);
+        byte[] outscript = fields.get("script", null);
+        if (outscript == null) {
+            String address = fields.get("address", null);
+            String message = fields.get("message", null);
+            outscript = script.scriptpubkey(address, message, coin, testnet);
+        }
+        byte[] b1 = int64(amount);
+        byte[] b2 = int16(version);
+        byte[] b3 = varint(BigInteger.valueOf(outscript.length));
+        byte[] b4 = outscript;
+        return bytes.concat(b1, b2, b3, b4);
+    }
+
+    private static byte[] dcrinout_witness_encode(dict fields) {
+        BigInteger amount = fields.get("amount", BigInteger.ZERO);
+        BigInteger blockheight = fields.get("blockheight", BigInteger.ZERO);
+        BigInteger blockindex = fields.get("blockindex", BigInteger.valueOf(0x0ffffffffL));
+        byte[] inscript = fields.get("script", new byte[]{});
+        byte[] b1 = int64(amount);
+        byte[] b2 = int32(blockheight);
+        byte[] b3 = int32(blockindex);
+        byte[] b4 = varint(BigInteger.valueOf(inscript.length));
+        byte[] b5 = inscript;
+        return bytes.concat(b1, b2, b3, b4, b5);
+    }
+
     private static byte[] neoinout_input_encode(dict fields) {
         String txnid = fields.get("txnid");
         BigInteger index = fields.get("index", BigInteger.ZERO);
@@ -542,6 +583,65 @@ public class transaction {
             }
             byte[] b6 = int32(locktime);
             return bytes.concat(b1, b2, b3, b4, b5, b6);
+        }
+        if (fmt.equals("dcrinout")) {
+            BigInteger version = fields.get("version", BigInteger.ONE);
+            dict[] inputs = fields.get("inputs", new dict[]{ });
+            dict[] outputs = fields.get("outputs", new dict[]{ });
+            BigInteger locktime = fields.get("locktime", BigInteger.ZERO);
+            BigInteger expiryheight = fields.get("expiryheight", BigInteger.ZERO);
+            dict[] witnesses = fields.get("witnesses", null);
+            BigInteger default_sequence = locktime.compareTo(BigInteger.ZERO) > 0 ? BigInteger.ZERO : BigInteger.valueOf(0x0ffffffffL);
+            byte[] b1 = int32(version);
+            byte[] b2 = varint(BigInteger.valueOf(inputs.length));
+            int inputs_length = 0;
+            byte[][] b_inputs = new byte[inputs.length][];
+            for (int i = 0; i < inputs.length; i++) {
+                byte[] b_input = dcrinout_input_encode(inputs[i], default_sequence);
+                b_inputs[i] = b_input;
+                inputs_length += b_input.length;
+            }
+            byte[] b3 = new byte[inputs_length];
+            int inputs_offset = 0;
+            for (byte[] b_input : b_inputs) {
+                System.arraycopy(b_input, 0, b3, inputs_offset, b_input.length);
+                inputs_offset += b_input.length;
+            }
+            byte[] b4 = varint(BigInteger.valueOf(outputs.length));
+            int outputs_length = 0;
+            byte[][] b_outputs = new byte[outputs.length][];
+            for (int i = 0; i < outputs.length; i++) {
+                byte[] b_output = dcrinout_output_encode(outputs[i], coin, testnet);
+                b_outputs[i] = b_output;
+                outputs_length += b_output.length;
+            }
+            byte[] b5 = new byte[outputs_length];
+            int outputs_offset = 0;
+            for (byte[] b_output : b_outputs) {
+                System.arraycopy(b_output, 0, b5, outputs_offset, b_output.length);
+                outputs_offset += b_output.length;
+            }
+            byte[] b6 = int32(locktime);
+            byte[] b7 = int32(expiryheight);
+            byte[] b8 = new byte[]{};
+            byte[] b9 = new byte[]{};
+            if (witnesses != null) {
+                b8 = varint(BigInteger.valueOf(witnesses.length));
+                int witnesses_length = 0;
+                byte[][] b_witnesses = new byte[witnesses.length][];
+                for (int i = 0; i < witnesses.length; i++) {
+                    byte[] b_witness = dcrinout_witness_encode(witnesses[i]);
+                    b_witnesses[i] = b_witness;
+                    witnesses_length += b_witness.length;
+                }
+                b9 = new byte[witnesses_length];
+                int witnesses_offset = 0;
+                for (byte[] b_witness : b_witnesses) {
+                    System.arraycopy(b_witness, 0, b9, witnesses_offset, b_witness.length);
+                    witnesses_offset += b_witness.length;
+                }
+            }
+            return bytes.concat(bytes.concat(b1, b2, b3, b4, b5, b6), b7, b8, b9);
         }
         if (fmt.equals("neoinout")) {
             BigInteger txtype = fields.get("type", BigInteger.valueOf(0x80));
@@ -875,6 +975,72 @@ public class transaction {
         return new pair<>(fields, txn);
     }
 
+    private static pair<dict, byte[]> dcrinout_input_decode(byte[] txn) {
+        int size1 = 32;
+        if (size1 > txn.length) throw new IllegalArgumentException("End of input");
+        String txnid = binint.b2h(bytes.rev(bytes.sub(txn, 0, size1)));
+        txn = bytes.sub(txn, size1);
+        pair<BigInteger, byte[]> r1 = parse_int32(txn);
+        BigInteger index = r1.l;
+        txn = r1.r;
+        pair<BigInteger, byte[]> r2 = parse_int8(txn);
+        BigInteger tree = r2.l;
+        txn = r2.r;
+        pair<BigInteger, byte[]> r3 = parse_int32(txn);
+        BigInteger sequence = r3.l;
+        txn = r3.r;
+        dict fields = new dict();
+        fields.put("txnid", txnid);
+        fields.put("index", index);
+        fields.put("tree", tree);
+        fields.put("sequence", sequence);
+        return new pair<>(fields, txn);
+    }
+
+    private static pair<dict, byte[]> dcrinout_output_decode(byte[] txn) {
+        pair<BigInteger, byte[]> r1 = parse_int64(txn);
+        BigInteger amount = r1.l;
+        txn = r1.r;
+        pair<BigInteger, byte[]> r2 = parse_int16(txn);
+        BigInteger version = r2.l;
+        txn = r2.r;
+        pair<BigInteger, byte[]> r3 = parse_varint(txn);
+        int size = r3.l.intValue();
+        txn = r3.r;
+        if (size > txn.length) throw new IllegalArgumentException("End of input");
+        byte[] outscript = bytes.sub(txn, 0, size);
+        txn = bytes.sub(txn, size);
+        dict fields = new dict();
+        fields.put("amount", amount);
+        fields.put("version", version);
+        fields.put("script", outscript);
+        return new pair<>(fields, txn);
+    }
+
+    private static pair<dict, byte[]> dcrinout_witness_decode(byte[] txn) {
+        pair<BigInteger, byte[]> r1 = parse_int64(txn);
+        BigInteger amount = r1.l;
+        txn = r1.r;
+        pair<BigInteger, byte[]> r2 = parse_int32(txn);
+        BigInteger blockheight = r2.l;
+        txn = r2.r;
+        pair<BigInteger, byte[]> r3 = parse_int32(txn);
+        BigInteger blockindex = r3.l;
+        txn = r3.r;
+        pair<BigInteger, byte[]> r4 = parse_varint(txn);
+        int size4 = r4.l.intValue();
+        txn = r4.r;
+        if (size4 > txn.length) throw new IllegalArgumentException("End of input");
+        byte[] inscript = bytes.sub(txn, 0, size4);
+        txn = bytes.sub(txn, size4);
+        dict fields = new dict();
+        fields.put("amount", amount);
+        fields.put("blockheight", blockheight);
+        fields.put("blockindex", blockindex);
+        fields.put("script", inscript);
+        return new pair<>(fields, txn);
+    }
+
     private static pair<dict, byte[]> neoinout_input_decode(byte[] txn) {
         int size = 32;
         if (size > txn.length) throw new IllegalArgumentException("End of input");
@@ -981,6 +1147,59 @@ public class transaction {
             fields.put("outputs", outputs);
             fields.put("locktime", locktime);
             if (expiryheight != null) fields.put("expiryheight", expiryheight);
+            return fields;
+        }
+        if (fmt.equals("dcrinout")) {
+            pair<BigInteger, byte[]> r1 = parse_int32(txn);
+            BigInteger version = r1.l;
+            txn = r1.r;
+            pair<BigInteger, byte[]> r2 = parse_varint(txn);
+            int input_count = r2.l.intValue();
+            txn = r2.r;
+            dict[] inputs = new dict[input_count];
+            for (int i = 0; i < inputs.length; i++) {
+                pair<dict, byte[]> r3 = dcrinout_input_decode(txn);
+                dict fields = r3.l;
+                txn = r3.r;
+                inputs[i] = fields;
+            }
+            pair<BigInteger, byte[]> r3 = parse_varint(txn);
+            int output_count = r3.l.intValue();
+            txn = r3.r;
+            dict[] outputs = new dict[output_count];
+            for (int i = 0; i < outputs.length; i++) {
+                pair<dict, byte[]> r4 = dcrinout_output_decode(txn);
+                dict fields = r4.l;
+                txn = r4.r;
+                outputs[i] = fields;
+            }
+            pair<BigInteger, byte[]> r4 = parse_int32(txn);
+            BigInteger locktime = r4.l;
+            txn = r4.r;
+            pair<BigInteger, byte[]> r5 = parse_int32(txn);
+            BigInteger expiryheight = r5.l;
+            txn = r5.r;
+            dict[] witnesses = null;
+            if (txn.length > 0) {
+                pair<BigInteger, byte[]> r6 = parse_varint(txn);
+                int witness_count = r6.l.intValue();
+                txn = r6.r;
+                witnesses = new dict[witness_count];
+                for (int i = 0; i < witnesses.length; i++) {
+                    pair<dict, byte[]> r7 = dcrinout_witness_decode(txn);
+                    dict fields = r7.l;
+                    txn = r7.r;
+                    witnesses[i] = fields;
+                }
+            }
+            if (txn.length != 0) throw new IllegalArgumentException("Invalid transaction");
+            dict fields = new dict();
+            fields.put("version", version);
+            fields.put("inputs", inputs);
+            fields.put("outputs", outputs);
+            fields.put("locktime", locktime);
+            fields.put("expiryheight", expiryheight);
+            fields.put("witnesses", witnesses);
             return fields;
         }
         if (fmt.equals("neoinout")) {
@@ -1374,6 +1593,15 @@ public class transaction {
     }
 
     public static String txnid(byte[] txn, String coin, boolean testnet) {
+        String txnfmt = coins.attr("transaction.format", coin, testnet);
+        if (txnfmt.equals("dcrinout")) {
+            dict fields = transaction_decode(txn, coin, testnet);
+            BigInteger version = fields.get("version");
+            version = version.or(BigInteger.ONE.shiftLeft(16));
+            fields.put("version", version);
+            fields.put("witnesses", null);
+            txn = transaction_encode(fields, coin, testnet);
+        }
         String fun = coins.attr("transaction.hashing", coin, testnet);
         byte[] prefix = coins.attr("transaction.hashing.prefix", new byte[]{ }, coin, testnet);
         byte[] b;
@@ -1382,6 +1610,7 @@ public class transaction {
             case "keccak256": b = hashing.keccak256(bytes.concat(prefix, txn)); break;
             case "sha256": b = hashing.sha256(bytes.concat(prefix, txn)); break;
             case "sha512h": b = hashing.sha512h(bytes.concat(prefix, txn)); break;
+            case "blake1s": b = hashing.blake1s(bytes.concat(prefix, txn)); break;
             case "blake2b256": b = hashing.blake2b(bytes.concat(prefix, txn), 32); break;
             default: throw new IllegalStateException("Unknown hashing function");
         }
@@ -1528,6 +1757,24 @@ public class transaction {
         return bytes.concat(bytes.concat(b1, b2, b3, b4, b5, b6), bytes.concat(b7, b8, b9, b10, b11, b12), bytes.concat(b13, b14, b15));
     }
 
+    private static byte[] dcrsighash_default(dict fields, int i, byte[] inscript, BigInteger amount, int flag, String coin, boolean testnet) {
+        BigInteger version = fields.get("version");
+        fields.put("version", version.or(BigInteger.ONE.shiftLeft(16)));
+        byte[] txn = transaction_encode(fields, coin, testnet);
+        fields.put("version", version);
+        dict[] inputs = fields.get("inputs");
+        byte[] b = int32(version.or(BigInteger.valueOf(3).shiftLeft(16)));
+        b = bytes.concat(b, varint(BigInteger.valueOf(inputs.length)));
+        for (int index = 0; index < inputs.length; index++) {
+            byte[] s = index == i ? inscript : new byte[]{};
+            b = bytes.concat(b, varint(BigInteger.valueOf(s.length)), s);
+        }
+        byte[] b1 = int32(BigInteger.valueOf(flag));
+        byte[] b2 = hashing.blake1s(txn);
+        byte[] b3 = hashing.blake1s(b);
+        return bytes.concat(b1, b2, b3);
+    }
+
     public static byte[] transaction_sign(byte[] txn, Object params, String coin, boolean testnet) {
         String fmt = coins.attr("transaction.format", coin, testnet);
         if (fmt.equals("inout")) {
@@ -1600,6 +1847,79 @@ public class transaction {
                 dict subfields = inputs[i];
                 subfields.put("script", inscripts[i]);
             }
+            return transaction_encode(fields, coin, testnet);
+        }
+        if (fmt.equals("dcrinout")) {
+            int sighashflag = SIGHASH_ALL;
+            String method = coins.attr("sighash.method", coin, testnet);
+            sighashfun sighashfunc;
+            if (method.equals("default")) sighashfunc = transaction::dcrsighash_default;
+            else {
+                throw new IllegalStateException("Unknown method");
+            }
+            dict fields = transaction_decode(txn, coin, testnet);
+            if (fields.has("witnesses")) fields.del("witnesses");
+            dict[] inputs = fields.get("inputs");
+            if (!(params instanceof Object[])) {
+                Object[] t = new Object[inputs.length];
+                for (int i = 0; i < t.length; i++) t[i] = params;
+                params = t;
+            }
+            Object[] _params = (Object[]) params;
+            dict[] witnesses = new dict[inputs.length];
+            for (int i = 0; i < inputs.length; i++) {
+                Object param = _params[i];
+                if (!(param instanceof dict)) {
+                    String privatekey = null;
+                    BigInteger amount = BigInteger.ZERO;
+                    if (param instanceof String) {
+                        privatekey = (String) param;
+                    }
+                    if (param instanceof Object[]) {
+                        Object[] tuple = (Object[]) param;
+                        privatekey = (String) tuple[0];
+                        amount = (BigInteger) tuple[1];
+                    }
+                    String publickey = wallet.publickey_from_privatekey(privatekey, coin, testnet);
+                    String address = wallet.address_from_publickey(publickey, coin, testnet);
+                    pair<BigInteger[], Boolean> t1 = wallet.publickey_decode(publickey, coin,testnet);
+                    BigInteger[] P = t1.l;
+                    boolean compressed = t1.r;
+                    pair<BigInteger, Boolean> t2 = secp256k1.enc(P);
+                    BigInteger p = t2.l;
+                    boolean odd = t2.r;
+                    byte[] prefix = odd ? new byte[]{ (byte)0x03 } : new byte[]{ (byte)0x02 };
+                    byte[] b = bytes.concat(prefix, binint.n2b(p, 32));
+                    String publickey_sec2 = binint.b2h(b);
+                    dict _dict = new dict();
+                    _dict.put("privatekeys", new String[]{ privatekey });
+                    _dict.put("script", script.scriptpubkey(address, null, coin, testnet));
+                    _dict.put("scriptsigfun", (scriptsigfun) (signatures -> script.scriptsig(signatures[0], publickey_sec2)));
+                    _dict.put("amount", amount);
+                    param = _dict;
+                }
+                dict _dict = (dict)param;
+                String[] privatekeys = _dict.get("privatekeys");
+                byte[] inscript = _dict.get("script");
+                scriptsigfun scriptsigfun = _dict.get("scriptsigfun");
+                BigInteger amount = _dict.get("amount", BigInteger.ZERO);
+                byte[] sighashdata = sighashfunc.f(fields, i, inscript, amount, sighashflag, coin, testnet);
+                byte[][] signatures = new byte[privatekeys.length][];
+                for (int j = 0; j < privatekeys.length; j++) {
+                    String privatekey = privatekeys[j];
+                    byte[] signature = signing.signature_create(privatekey, sighashdata, null, coin, testnet);
+                    byte[] f = int8(BigInteger.valueOf(sighashflag & 0xff));
+                    signatures[j] = bytes.concat(signature, f);
+                }
+                inscript = scriptsigfun.f(signatures);
+                dict witness = new dict();
+                if (_dict.has("amount")) witness.put("amount", _dict.get("amount"));
+                if (_dict.has("blockheight")) witness.put("blockheight", _dict.get("blockheight"));
+                if (_dict.has("blockindex")) witness.put("blockindex", _dict.get("blockindex"));
+                witness.put("script", inscript);
+                witnesses[i] = witness;
+            }
+            fields.put("witnesses", witnesses);
             return transaction_encode(fields, coin, testnet);
         }
         if (fmt.equals("neoinout")) {

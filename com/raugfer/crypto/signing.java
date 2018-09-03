@@ -120,6 +120,7 @@ public class signing {
             case "keccak256": b = hashing.keccak256(bytes.concat(prefix, data)); break;
             case "sha256": b = hashing.sha256(bytes.concat(prefix, data)); break;
             case "sha512h": b = hashing.sha512h(bytes.concat(prefix, data)); break;
+            case "blake1s": b = hashing.blake1s(bytes.concat(prefix, data)); break;
             case "blake2b256": b = hashing.blake2b(data, prefix, 32); break;
             default: throw new IllegalStateException("Unknown hash function");
         }
@@ -167,6 +168,7 @@ public class signing {
             case "keccak256": b = hashing.keccak256(bytes.concat(prefix, data)); break;
             case "sha256": b = hashing.sha256(bytes.concat(prefix, data)); break;
             case "sha512h": b = hashing.sha512h(bytes.concat(prefix, data)); break;
+            case "blake1s": b = hashing.blake1s(bytes.concat(prefix, data)); break;
             case "blake2b256": b = hashing.blake2b(data, prefix, 32); break;
             default: throw new IllegalStateException("Unknown hash function");
         }
