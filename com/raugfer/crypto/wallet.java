@@ -62,6 +62,8 @@ public class wallet {
         else
         if (fun.equals("hash256:4")) f = base58::_sub_hash256_0_4;
         else
+        if (fun.equals("ripemd160:4")) f = base58::_sub_ripemd160_0_4;
+        else
         if (fun.equals("blake1s:4")) f = base58::_sub_blake1s_0_4;
         else
         if (fun.equals("blake256:4")) f = base58::_sub_blake256_0_4;
@@ -90,6 +92,11 @@ public class wallet {
         if (fun.equals("hash256:4")) {
             hash_len = 4;
             f = base58::_sub_hash256_0_4;
+        }
+        else
+        if (fun.equals("ripemd160:4")) {
+            hash_len = 4;
+            f = base58::_sub_ripemd160_0_4;
         }
         else
         if (fun.equals("blake1s:4")) {
@@ -341,19 +348,41 @@ public class wallet {
             throw new IllegalStateException("Unknown curve");
         }
         String fmt = coins.attr("publickey.format", coin, testnet);
+        String w;
         switch (fmt) {
             case "hex":
                 BigInteger x = P[0], y = P[1];
                 b = bytes.concat(binint.n2b(x, 32), binint.n2b(y, 32));
-                return binint.b2h(b);
-            case "sec2": return binint.b2h(b);
-            case "base32": return base32_encode(b, "publickey", coin, testnet);
-            case "base58": return base58_encode(b, "publickey", coin, testnet);
-            default: throw new IllegalStateException("Unknown format");
+                w = binint.b2h(b);
+                break;
+            case "sec2":
+                w = binint.b2h(b);
+                break;
+            case "base32":
+                w = base32_encode(b, "publickey", coin, testnet);
+                break;
+            case "base58":
+                w = base58_encode(b, "publickey", coin, testnet);
+                break;
+            default:
+                throw new IllegalStateException("Unknown format");
         }
+        String prefix = coins.attr("publickey.prefix", "", coin, testnet);
+        String suffix = coins.attr("publickey.suffix", "", coin, testnet);
+        return prefix + w + suffix;
     }
 
     public static pair<BigInteger[], Boolean> publickey_decode(String w, String coin, boolean testnet) {
+        String prefix = coins.attr("publickey.prefix", "", coin, testnet);
+        String suffix = coins.attr("publickey.suffix", "", coin, testnet);
+        if (w.length() < prefix.length()) throw new IllegalArgumentException("Invalid length");
+        String p = w.substring(0, prefix.length());
+        if (!p.equals(prefix)) throw new IllegalArgumentException("Invalid prefix");
+        w = w.substring(prefix.length());
+        if (w.length() < suffix.length()) throw new IllegalArgumentException("Invalid length");
+        String s = w.substring(w.length()-suffix.length());
+        if (!s.equals(suffix)) throw new IllegalArgumentException("Invalid suffix");
+        w = w.substring(0, w.length()-suffix.length());
         String fmt = coins.attr("publickey.format", coin, testnet);
         BigInteger[] P = null;
         byte[] b;
