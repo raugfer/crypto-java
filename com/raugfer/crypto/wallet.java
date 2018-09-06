@@ -373,16 +373,18 @@ public class wallet {
     }
 
     public static pair<BigInteger[], Boolean> publickey_decode(String w, String coin, boolean testnet) {
-        String prefix = coins.attr("publickey.prefix", "", coin, testnet);
-        String suffix = coins.attr("publickey.suffix", "", coin, testnet);
-        if (w.length() < prefix.length()) throw new IllegalArgumentException("Invalid length");
-        String p = w.substring(0, prefix.length());
-        if (!p.equals(prefix)) throw new IllegalArgumentException("Invalid prefix");
-        w = w.substring(prefix.length());
-        if (w.length() < suffix.length()) throw new IllegalArgumentException("Invalid length");
-        String s = w.substring(w.length()-suffix.length());
-        if (!s.equals(suffix)) throw new IllegalArgumentException("Invalid suffix");
-        w = w.substring(0, w.length()-suffix.length());
+        {
+            String prefix = coins.attr("publickey.prefix", "", coin, testnet);
+            String suffix = coins.attr("publickey.suffix", "", coin, testnet);
+            if (w.length() < prefix.length()) throw new IllegalArgumentException("Invalid length");
+            String p = w.substring(0, prefix.length());
+            if (!p.equals(prefix)) throw new IllegalArgumentException("Invalid prefix");
+            w = w.substring(prefix.length());
+            if (w.length() < suffix.length()) throw new IllegalArgumentException("Invalid length");
+            String s = w.substring(w.length() - suffix.length());
+            if (!s.equals(suffix)) throw new IllegalArgumentException("Invalid suffix");
+            w = w.substring(0, w.length() - suffix.length());
+        }
         String fmt = coins.attr("publickey.format", coin, testnet);
         BigInteger[] P = null;
         byte[] b;
