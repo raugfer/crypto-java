@@ -2022,7 +2022,7 @@ public class transaction {
             dict sigobject = new dict();
             sigobject.put("Hint", hint);
             sigobject.put("Signature", signature);
-            fields.put("Signatures", new Object[]{ sigobject });
+            fields.put("Signatures", new dict[]{ sigobject });
             return transaction_encode(fields, coin, testnet);
         }
         if (fmt.equals("raiblock")) {
