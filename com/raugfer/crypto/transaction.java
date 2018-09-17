@@ -897,7 +897,7 @@ public class transaction {
         }
         if (fmt.equals("wavestx")) {
             int txtype = 4;
-            int version = 2;
+            BigInteger version = fields.get("version", BigInteger.valueOf(2));
             String publickey = fields.get("publickey", null);
             String asset = fields.get("asset", null);
             String fee_asset = fields.get("fee_asset", null);
@@ -912,8 +912,9 @@ public class transaction {
             byte[] b_fee_asset = fee_asset != null ? bytes.concat(new byte[]{ 1 }, base58.decode(fee_asset)) : new byte[]{ 0 };
             byte[] b_recipient = base58.decode(recipient);
             byte[] b_attachment = attachment != null ? base58.decode(attachment) : new byte[]{ };
+            byte[] b0 = binint.n2b(version, 1);
             byte[] b1 = binint.n2b(BigInteger.valueOf(txtype), 1);
-            byte[] b2 = binint.n2b(BigInteger.valueOf(version), 1);
+            byte[] b2 = version.compareTo(BigInteger.ONE) > 0 ? binint.n2b(version, 1) : new byte[]{ };
             byte[] b3 = b_publickey;
             byte[] b4 = b_asset;
             byte[] b5 = b_fee_asset;
@@ -924,7 +925,7 @@ public class transaction {
             byte[] b10 = binint.n2b(BigInteger.valueOf(b_attachment.length), 2);
             byte[] b11 = b_attachment;
             byte[] b12 = b_signature;
-            return bytes.concat(bytes.concat(b1, b2, b3, b4, b5, b6), bytes.concat(b7, b8, b9, b10, b11, b12));
+            return bytes.concat(b0, bytes.concat(b1, b2, b3, b4, b5, b6), bytes.concat(b7, b8, b9, b10, b11, b12));
         }
         throw new IllegalStateException("Unknown format");
     }
@@ -1521,13 +1522,18 @@ public class transaction {
         }
         if (fmt.equals("wavestx")) {
             if (txn.length < 1) throw new IllegalArgumentException("End of input");
+            BigInteger version = binint.b2n(bytes.sub(txn, 0, 1));
+            txn = bytes.sub(txn, 1);
+            if (txn.length < 1) throw new IllegalArgumentException("End of input");
             int txtype = binint.b2n(bytes.sub(txn, 0, 1)).intValue();
             txn = bytes.sub(txn, 1);
             if (txtype != 4) throw new IllegalArgumentException("Invalid type");
-            if (txn.length < 1) throw new IllegalArgumentException("End of input");
-            int version = binint.b2n(bytes.sub(txn, 0, 1)).intValue();
-            txn = bytes.sub(txn, 1);
-            if (version != 2) throw new IllegalArgumentException("Invalid version");
+            if (version.compareTo(BigInteger.ONE) > 0) {
+                if (txn.length < 1) throw new IllegalArgumentException("End of input");
+                version = binint.b2n(bytes.sub(txn, 0, 1));
+                txn = bytes.sub(txn, 1);
+            }
+            if (version.compareTo(BigInteger.valueOf(2)) > 0) throw new IllegalArgumentException("Invalid version");
             if (txn.length < 32) throw new IllegalArgumentException("End of input");
             byte[] b_publickey = bytes.sub(txn, 0, 32);
             txn = bytes.sub(txn, 32);
@@ -1578,6 +1584,7 @@ public class transaction {
                 assert txn.length == 0;
             }
             dict fields = new dict();
+            fields.put("version", version);
             if (publickey != null) fields.put("publickey", publickey);
             if (asset != null) fields.put("asset", asset);
             if (fee_asset != null) fields.put("fee_asset", fee_asset);
@@ -1594,6 +1601,11 @@ public class transaction {
 
     public static String txnid(byte[] txn, String coin, boolean testnet) {
         String txnfmt = coins.attr("transaction.format", coin, testnet);
+        if (txnfmt.equals("neoinout")) {
+            dict fields = transaction_decode(txn, coin, testnet);
+            if (fields.has("scripts")) fields.del("scripts");
+            txn = transaction_encode(fields, coin, testnet);
+        }
         if (txnfmt.equals("dcrinout")) {
             dict fields = transaction_decode(txn, coin, testnet);
             BigInteger version = fields.get("version");
@@ -1601,6 +1613,23 @@ public class transaction {
             fields.put("version", version);
             fields.put("witnesses", null);
             txn = transaction_encode(fields, coin, testnet);
+        }
+        if (txnfmt.equals("xdr")) {
+            dict fields = transaction_decode(txn, coin, testnet);
+            if (fields.has("Signatures")) fields.del("Signatures");
+            txn = transaction_encode(fields, coin, testnet);
+        }
+        if (txnfmt.equals("raiblock")) {
+            dict fields = transaction_decode(txn, coin, testnet);
+            if (fields.has("signature")) fields.del("signature");
+            if (fields.has("work")) fields.del("work");
+            txn = transaction_encode(fields, coin, testnet);
+        }
+        if (txnfmt.equals("wavestx")) {
+            dict fields = transaction_decode(txn, coin, testnet);
+            if (fields.has("signature")) fields.del("signature");
+            txn = transaction_encode(fields, coin, testnet);
+            txn = bytes.sub(txn, 1);
         }
         String fun = coins.attr("transaction.hashing", coin, testnet);
         byte[] prefix = coins.attr("transaction.hashing.prefix", new byte[]{ }, coin, testnet);
@@ -2077,6 +2106,7 @@ public class transaction {
             String publickey = wallet.publickey_from_privatekey(privatekey, coin, testnet);
             fields.put("publickey", publickey);
             txn = transaction_encode(fields, coin, testnet);
+            txn = bytes.sub(txn, 1);
             byte[] signature = signing.signature_create(privatekey, txn, null, coin, testnet);
             fields.put("signature", signature);
             return transaction_encode(fields, coin, testnet);

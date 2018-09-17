@@ -557,7 +557,7 @@ public class wallet {
 
     public static String address_encode(BigInteger h, String kind, String coin, boolean testnet) {
         String[] kinds = coins.attr("address.kinds", new String[]{ "address" }, coin, testnet);
-        boolean reverse = coins.attr("address.hashing.reverse", false, coin, testnet);
+        boolean reverse = coins.attr("address.reverse", false, coin, testnet);
         int bits = coins.attr("address.bits", 160, coin, testnet);
         boolean found = false;
         for (String k: kinds) {
@@ -604,7 +604,7 @@ public class wallet {
 
     public static pair<BigInteger, String> address_decode(String w, String coin, boolean testnet) {
         String[] kinds = coins.attr("address.kinds", new String[]{ "address" }, coin, testnet);
-        boolean reverse = coins.attr("address.hashing.reverse", false, coin, testnet);
+        boolean reverse = coins.attr("address.reverse", false, coin, testnet);
         int bits = coins.attr("address.bits", 160, coin, testnet);
         String prefix = coins.attr("address.prefix", "", coin, testnet);
         String suffix = coins.attr("address.suffix", "", coin, testnet);

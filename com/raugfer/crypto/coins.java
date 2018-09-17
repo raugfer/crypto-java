@@ -446,6 +446,7 @@ public class coins {
         attrs.put("address.format", "base58");
         attrs.put("address.hashing", "securehash");
         attrs.put("address.hashing.reverse", true);
+        attrs.put("address.reverse", true);
         attrs.put("address.mode", "account");
         attrs.put("address.base58.prefix", (_testnetfun) (testnet -> testnet
                 ? new byte[]{ (byte)0x01, (byte)'T' }
