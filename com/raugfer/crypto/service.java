@@ -423,11 +423,15 @@ public class service {
             String source_address = source_addresses[0];
             context f = (lookup) -> lookup.call(source_address);
             BigInteger timestamp = BigInteger.valueOf(System.currentTimeMillis());
+            String asset_id = coins.attr("asset.id", "", coin, testnet);
+            String fee_asset_id = coins.attr("fee_asset.id", "", coin, testnet);
             dict fields = new dict();
             fields.put("timestamp", timestamp);
             fields.put("amount", amount);
             fields.put("fee", fee);
             fields.put("recipient", address);
+            if (!asset_id.equals("")) fields.put("asset", asset_id);
+            if (!fee_asset_id.equals("")) fields.put("fee_asset", fee_asset_id);
             byte[] txn = transaction.transaction_encode(fields, coin, testnet);
             return new pair<>(new byte[][]{ txn }, f);
         }
