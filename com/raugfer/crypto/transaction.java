@@ -897,7 +897,7 @@ public class transaction {
         }
         if (fmt.equals("wavestx")) {
             int txtype = 4;
-            BigInteger version = fields.get("version", BigInteger.valueOf(2));
+            BigInteger version = fields.get("version", BigInteger.valueOf(1));
             String publickey = fields.get("publickey", null);
             String asset = fields.get("asset", null);
             String fee_asset = fields.get("fee_asset", null);
