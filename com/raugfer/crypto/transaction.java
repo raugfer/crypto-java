@@ -513,7 +513,7 @@ public class transaction {
             dict[] outputs = fields.get("outputs", new dict[]{ });
             BigInteger locktime = fields.get("locktime", BigInteger.ZERO);
             BigInteger default_sequence = locktime.compareTo(BigInteger.ZERO) > 0 ? BigInteger.ZERO : BigInteger.valueOf(0x0ffffffffL);
-            if (version.equals(BigInteger.valueOf(0x080000003L))) { // zcash overwinter
+            if (version.equals(BigInteger.valueOf(0x080000004L))) { // zcash sapling
                 int default_groupid = coins.attr("transaction.groupid", coin, testnet);
                 BigInteger groupid = fields.get("groupid", BigInteger.valueOf(default_groupid & 0x0ffffffffL));
                 BigInteger expiryheight = fields.get("expiryheight", BigInteger.ZERO);
@@ -549,8 +549,11 @@ public class transaction {
                 }
                 byte[] b7 = int32(locktime);
                 byte[] b8 = int32(expiryheight);
-                byte[] b9 = varint(BigInteger.ZERO);
-                return bytes.concat(bytes.concat(b1, b2, b3, b4, b5, b6), bytes.concat(b7, b8, b9));
+                byte[] b9 = int64(BigInteger.ZERO);
+                byte[] b10 = varint(BigInteger.ZERO);
+                byte[] b11 = varint(BigInteger.ZERO);
+                byte[] b12 = varint(BigInteger.ZERO);
+                return bytes.concat(bytes.concat(b1, b2, b3, b4, b5, b6), bytes.concat(b7, b8, b9, b10, b11, b12));
             }
             byte[] b1 = int32(version);
             byte[] b2 = varint(BigInteger.valueOf(inputs.length));
@@ -1102,7 +1105,7 @@ public class transaction {
             BigInteger version = r1.l;
             txn = r1.r;
             BigInteger groupid = null;
-            if (version.equals(BigInteger.valueOf(0x080000003L))) { // zcash overwinter
+            if (version.equals(BigInteger.valueOf(0x080000004L))) { // zcash sapling
                 pair<BigInteger, byte[]> r2 = parse_int32(txn);
                 groupid = r2.l;
                 txn = r2.r;
@@ -1131,14 +1134,26 @@ public class transaction {
             BigInteger locktime = r4.l;
             txn = r4.r;
             BigInteger expiryheight = null;
-            if (version.equals(BigInteger.valueOf(0x080000003L))) { // zcash overwinter
+            if (version.equals(BigInteger.valueOf(0x080000004L))) { // zcash sapling
                 pair<BigInteger, byte[]> r5 = parse_int32(txn);
                 expiryheight = r5.l;
                 txn = r5.r;
-                pair<BigInteger, byte[]> r6 = parse_varint(txn);
-                BigInteger count = r6.l;
+                pair<BigInteger, byte[]> r6 = parse_int64(txn);
+                BigInteger valuebalance = r6.l;
                 txn = r6.r;
-                if (!count.equals(BigInteger.ZERO)) throw new IllegalArgumentException("Invalid transaction");
+                if (!valuebalance.equals(BigInteger.ZERO)) throw new IllegalArgumentException("Invalid transaction");
+                pair<BigInteger, byte[]> r7 = parse_varint(txn);
+                BigInteger vshieldedspend = r7.l;
+                txn = r7.r;
+                if (!vshieldedspend.equals(BigInteger.ZERO)) throw new IllegalArgumentException("Invalid transaction");
+                pair<BigInteger, byte[]> r8 = parse_varint(txn);
+                BigInteger vshieldedoutput = r8.l;
+                txn = r8.r;
+                if (!vshieldedoutput.equals(BigInteger.ZERO)) throw new IllegalArgumentException("Invalid transaction");
+                pair<BigInteger, byte[]> r9 = parse_varint(txn);
+                BigInteger vjoinsplit = r9.l;
+                txn = r9.r;
+                if (!vjoinsplit.equals(BigInteger.ZERO)) throw new IllegalArgumentException("Invalid transaction");
             }
             if (txn.length != 0) throw new IllegalArgumentException("Invalid transaction");
             dict fields = new dict();
@@ -1723,7 +1738,7 @@ public class transaction {
         return bytes.concat(bytes.concat(b1, b2, b3, b4, b5, b6), bytes.concat(b7, b8, b9, b10, b11, b12));
     }
 
-    private static byte[] sighash_overwinter(dict fields, int i, byte[] inscript, BigInteger amount, int flag, String coin, boolean testnet) {
+    private static byte[] sighash_sapling(dict fields, int i, byte[] inscript, BigInteger amount, int flag, String coin, boolean testnet) {
         if (amount == null) throw new IllegalArgumentException("Amount required");
         BigInteger version = fields.get("version");
         BigInteger groupid = fields.get("groupid");
@@ -1774,16 +1789,19 @@ public class transaction {
         byte[] b4 = hashing.blake2b(t4, "ZcashSequencHash".getBytes(), 32);
         byte[] b5 = hashing.blake2b(t5, "ZcashOutputsHash".getBytes(), 32);
         byte[] b6 = new byte[32];
-        byte[] b7 = int32(locktime);
-        byte[] b8 = int32(expiryheight);
-        byte[] b9 = int32(BigInteger.valueOf(flag));
-        byte[] b10 = txnid;
-        byte[] b11 = int32(index);
-        byte[] b12 = varint(BigInteger.valueOf(inscript.length));
-        byte[] b13 = inscript;
-        byte[] b14 = int64(amount);
-        byte[] b15 = int32(sequence);
-        return bytes.concat(bytes.concat(b1, b2, b3, b4, b5, b6), bytes.concat(b7, b8, b9, b10, b11, b12), bytes.concat(b13, b14, b15));
+        byte[] b7 = new byte[32];
+        byte[] b8 = new byte[32];
+        byte[] b9 = int32(locktime);
+        byte[] b10 = int32(expiryheight);
+        byte[] b11 = int64(BigInteger.ZERO);
+        byte[] b12 = int32(BigInteger.valueOf(flag));
+        byte[] b13 = txnid;
+        byte[] b14 = int32(index);
+        byte[] b15 = varint(BigInteger.valueOf(inscript.length));
+        byte[] b16 = inscript;
+        byte[] b17 = int64(amount);
+        byte[] b18 = int32(sequence);
+        return bytes.concat(bytes.concat(b1, b2, b3, b4, b5, b6), bytes.concat(b7, b8, b9, b10, b11, b12), bytes.concat(b13, b14, b15, b16, b17, b18));
     }
 
     private static byte[] dcrsighash_default(dict fields, int i, byte[] inscript, BigInteger amount, int flag, String coin, boolean testnet) {
@@ -1812,7 +1830,7 @@ public class transaction {
             sighashfun sighashfunc;
             if (method.equals("default")) sighashfunc = transaction::sighash_default;
             else
-            if (method.equals("overwinter")) sighashfunc = transaction::sighash_overwinter;
+            if (method.equals("sapling")) sighashfunc = transaction::sighash_sapling;
             else
             if (method.equals("forkid")) {
                 sighashfunc = transaction::sighash_forkid;
