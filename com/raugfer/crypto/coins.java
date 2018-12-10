@@ -230,6 +230,7 @@ public class coins {
         attrs.put("hdwallet.coin_type", 2);
         attrs.put("confirmations", 6);
         attrs.put("block.time", 5 * 30);
+        attrs.put("default_fee", 6400);
         coins.put("litecoin", attrs);
     }
 
