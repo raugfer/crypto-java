@@ -120,7 +120,7 @@ public class ed25519 {
     public static boolean ver(BigInteger[] P, BigInteger h, Object[] o, hashing.hashfun f, int h_len) {
         BigInteger R = (BigInteger) o[0];
         BigInteger S = (BigInteger) o[1];
-        Boolean odd = (Boolean) o[3];
+        Boolean odd = (Boolean) o[2];
         if (odd != null) {
             BigInteger x = P[0], y = P[1];
             P = new BigInteger[]{ fnd(y, odd), y };
