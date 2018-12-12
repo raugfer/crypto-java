@@ -230,6 +230,7 @@ public class coins {
         attrs.put("hdwallet.coin_type", 2);
         attrs.put("confirmations", 6);
         attrs.put("block.time", 5 * 30);
+        attrs.put("default_fee", 100000);
         coins.put("litecoin", attrs);
     }
 
@@ -478,11 +479,11 @@ public class coins {
         attrs.put("address.base58.prefix", (_testnetfun) (testnet -> testnet ? new byte[]{ (byte)0x1d, (byte)0x25 } : new byte[]{ (byte)0x1c, (byte)0xb8 }));
         attrs.put("script.base58.prefix", (_testnetfun) (testnet -> testnet ? new byte[]{ (byte)0x1c, (byte)0xba } : new byte[]{ (byte)0x1c, (byte)0xbd }));
         attrs.put("hdwallet.coin_type", 133);
-        attrs.put("transaction.version", 0x80000003);
-        attrs.put("transaction.groupid", 0x03c48270);
+        attrs.put("transaction.version", 0x80000004);
+        attrs.put("transaction.groupid", 0x892f2085);
         attrs.put("signature.hashing", "blake2b256");
-        attrs.put("signature.hashing.prefix", bytes.concat("ZcashSigHash".getBytes(), new byte[]{ (byte)0x19, (byte)0x1b, (byte)0xa8, (byte)0x5b }));
-        attrs.put("sighash.method", "overwinter");
+        attrs.put("signature.hashing.prefix", bytes.concat("ZcashSigHash".getBytes(), new byte[]{ (byte)0xbb, (byte)0x09, (byte)0xb8, (byte)0x76 }));
+        attrs.put("sighash.method", "sapling");
         attrs.put("confirmations", 20);
         attrs.put("block.time", 5 * 30);
         attrs.put("decimals", 8);
