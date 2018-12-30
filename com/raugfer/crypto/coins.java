@@ -63,6 +63,14 @@ public class coins {
 
     static {
         dict attrs = new dict();
+        attrs.put("overloads", "bitcoincash");
+        attrs.put("hdwallet.coin_type", 236);
+        attrs.put("confirmations", 72);
+        coins.put("bitcoinsv", attrs);
+    }
+
+    static {
+        dict attrs = new dict();
         attrs.put("overloads", "bitcoin");
         attrs.put("privatekey.base58.prefix", (_testnetfun) (testnet -> testnet ? new byte[]{ (byte)0xef } : new byte[]{ (byte)0xcc }));
         attrs.put("address.base58.prefix", (_testnetfun) (testnet -> testnet ? new byte[]{ (byte)0x8c } : new byte[]{ (byte)0x4c }));
