@@ -66,6 +66,7 @@ public class coins {
         attrs.put("overloads", "bitcoincash");
         attrs.put("hdwallet.coin_type", 236);
         attrs.put("confirmations", 72);
+        attrs.put("default_fee", 960);
         coins.put("bitcoinsv", attrs);
     }
 
