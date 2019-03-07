@@ -124,6 +124,8 @@ public class signing {
             case "blake2b256": b = hashing.blake2b(data, prefix, 32); break;
             default: throw new IllegalStateException("Unknown hash function");
         }
+        byte[] envelop_prefix = coins.attr("signature.hashing.envelop.prefix", new byte[]{ }, coin, testnet);
+        b = bytes.concat(envelop_prefix, b);
         BigInteger h = binint.b2n(b);
         int h_len = b.length;
         Object[] S;
@@ -172,6 +174,8 @@ public class signing {
             case "blake2b256": b = hashing.blake2b(data, prefix, 32); break;
             default: throw new IllegalStateException("Unknown hash function");
         }
+        byte[] envelop_prefix = coins.attr("signature.hashing.envelop.prefix", new byte[]{ }, coin, testnet);
+        b = bytes.concat(envelop_prefix, b);
         BigInteger h = binint.b2n(b);
         int h_len = b.length;
         String curve = coins.attr("ecc.curve", coin, testnet);

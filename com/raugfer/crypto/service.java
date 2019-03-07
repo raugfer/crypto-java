@@ -1,5 +1,6 @@
 package com.raugfer.crypto;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -86,6 +87,28 @@ public class service {
         }
         if (fmt.equals("wavestx")) {
             return fee;
+        }
+        if (fmt.equals("cbor")) {
+            List<dict> list = new ArrayList<>();
+            for (String source_address : source_addresses) {
+                list.addAll(Arrays.asList(cb.get_utxos(source_address, coin, testnet)));
+            }
+            dict[] utxos = list.toArray(new dict[]{ });
+            Arrays.sort(utxos, (dict o1, dict o2) -> {
+                BigInteger amount1 = o1.get("amount");
+                BigInteger amount2 = o2.get("amount");
+                return amount2.compareTo(amount1);
+            });
+            BigInteger balance = BigInteger.ZERO;
+            BigInteger estimatefee = BigInteger.ZERO;
+            for (int i = 1; i <= utxos.length; i++) {
+                int estimatesize = 1 + (1 + (1 + i * (1 + 1 + 4 + 1 + (2 + 32) + 5) + 1) + (1 + 2 * (1 + 1 + 4 + 1 + (2 + 28 + ((1 + (4 + 30))/2) + (testnet ? 5 : 0) + 1) + 5 + 9) + 1) + 1) + (1 + i * (1 + 1 + 4 + 1 + 2 + 64 + 2 + 64));
+                BigDecimal factor = new BigDecimal(43.946).multiply(new BigDecimal(estimatesize));
+                estimatefee = new BigDecimal(155381).add(factor).setScale(0, BigDecimal.ROUND_CEILING).toBigIntegerExact();
+                balance = balance.add((BigInteger) utxos[i-1].get("amount"));
+                if (balance.compareTo(amount.add(estimatefee)) >= 0) break;
+            }
+            return estimatefee;
         }
         throw new IllegalArgumentException("Unknown format");
     }
@@ -432,6 +455,64 @@ public class service {
             fields.put("recipient", address);
             if (!asset_id.equals("")) fields.put("asset", asset_id);
             if (!fee_asset_id.equals("")) fields.put("fee_asset", fee_asset_id);
+            byte[] txn = transaction.transaction_encode(fields, coin, testnet);
+            return new pair<>(new byte[][]{ txn }, f);
+        }
+        if (fmt.equals("cbor")) {
+            List<dict> list = new ArrayList<>();
+            for (String source_address : source_addresses) {
+                list.addAll(Arrays.asList(cb.get_utxos(source_address, coin, testnet)));
+            }
+            dict[] utxos = list.toArray(new dict[]{ });
+            Arrays.sort(utxos, (dict o1, dict o2) -> {
+                BigInteger amount1 = o1.get("amount");
+                BigInteger amount2 = o2.get("amount");
+                return amount2.compareTo(amount1);
+            });
+            BigInteger balance = BigInteger.ZERO;
+            for (int i = 1; i <= utxos.length; i++) {
+                balance = balance.add(utxos[i-1].get("amount"));
+                if (balance.compareTo(amount.add(fee)) >= 0) {
+                    dict[] t = new dict[i];
+                    System.arraycopy(utxos, 0, t, 0, t.length);
+                    utxos = t;
+                    break;
+                }
+            }
+            dict[] _utxos = utxos;
+            context f = (lookup) -> {
+                Object[] params = new Object[_utxos.length];
+                for (int i = 0; i < _utxos.length; i++) {
+                    dict utxo = _utxos[i];
+                    params[i] = new Object[]{ lookup.call(utxo.get("address")), utxo.get("amount") };
+                }
+                return params;
+            };
+            dict[] inputs = new dict[utxos.length];
+            for (int i = 0; i < utxos.length; i++) {
+                dict utxo = utxos[i];
+                dict input = new dict();
+                input.put("txnid", utxo.get("txnid"));
+                input.put("index", utxo.get("index"));
+                inputs[i] = input;
+            }
+            BigInteger change = balance.subtract(amount.add(fee));
+            if (change.compareTo(BigInteger.ZERO) < 0) throw new IllegalArgumentException("Insufficient balance");
+            boolean has_change = change.compareTo(BigInteger.ZERO) > 0;
+            dict[] outputs = new dict[has_change ? 2 : 1];
+            dict output = new dict();
+            output.put("amount", amount);
+            output.put("address", address);
+            outputs[0] = output;
+            if (has_change) {
+                output = new dict();
+                output.put("amount", change);
+                output.put("address", change_address);
+                outputs[1] = output;
+            }
+            dict fields = new dict();
+            fields.put("inputs", inputs);
+            fields.put("outputs", outputs);
             byte[] txn = transaction.transaction_encode(fields, coin, testnet);
             return new pair<>(new byte[][]{ txn }, f);
         }

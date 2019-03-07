@@ -17,7 +17,8 @@ public class wallet {
             throw new IllegalStateException("Unknown hashing function");
         }
         byte[] prefix = coins.attr(kind + ".base32.prefix", new byte[]{ }, coin, testnet);
-        String w = base32.check_encode(b, prefix, f);
+        byte[] suffix = coins.attr(kind + ".base32.suffix", new byte[]{ }, coin, testnet);
+        String w = base32.check_encode(b, prefix, suffix, f);
         String digits = coins.attr("base32.digits", base32.digits, coin, testnet);
         w = base32.translate(w, null, digits);
         return w;
@@ -48,9 +49,11 @@ public class wallet {
         String digits = coins.attr("base32.digits", base32.digits, coin, testnet);
         w = base32.translate(w, digits, null);
         byte[] prefix = coins.attr(kind + ".base32.prefix", new byte[]{ }, coin, testnet);
-        pair<byte[], byte[]> t = base32.check_decode(w, prefix.length, hash_len, f);
-        byte[] b = t.l, p = t.r;
+        byte[] suffix = coins.attr(kind + ".base32.suffix", new byte[]{ }, coin, testnet);
+        triple<byte[], byte[], byte[]> t = base32.check_decode(w, prefix.length, suffix.length, hash_len, f);
+        byte[] b = t.l, p = t.r, s = t.t;
         if (!bytes.equ(p, prefix)) throw new IllegalArgumentException("Invalid prefix");
+        if (!bytes.equ(s, suffix)) throw new IllegalArgumentException("Invalid suffix");
         return b;
     }
 
@@ -69,11 +72,14 @@ public class wallet {
         if (fun.equals("blake256:4")) f = base58::_sub_blake256_0_4;
         else
         if (fun.equals("securehash:4")) f = base58::_sub_securehash_0_4;
+        else
+        if (fun.equals("crc32:5")) f = base58::_concat_crc32_5;
         else {
             throw new IllegalStateException("Unknown hashing function");
         }
         byte[] prefix = coins.attr(kind + ".base58.prefix", new byte[]{ }, coin, testnet);
-        String w = base58.check_encode(b, prefix, f);
+        byte[] suffix = coins.attr(kind + ".base58.suffix", new byte[]{ }, coin, testnet);
+        String w = base58.check_encode(b, prefix, suffix, f);
         String digits = coins.attr("base58.digits", base58.digits, coin, testnet);
         w = base58.translate(w, null, digits);
         return w;
@@ -113,15 +119,22 @@ public class wallet {
             hash_len = 4;
             f = base58::_sub_securehash_0_4;
         }
+        else
+        if (fun.equals("crc32:5")) {
+            hash_len = 5;
+            f = base58::_concat_crc32_5;
+        }
         else {
             throw new IllegalStateException("Unknown hashing function");
         }
         String digits = coins.attr("base58.digits", base58.digits, coin, testnet);
         w = base58.translate(w, digits, null);
         byte[] prefix = coins.attr(kind + ".base58.prefix", new byte[]{ }, coin, testnet);
-        pair<byte[], byte[]> t = base58.check_decode(w, prefix.length, hash_len, f);
-        byte[] b = t.l, p = t.r;
+        byte[] suffix = coins.attr(kind + ".base58.suffix", new byte[]{ }, coin, testnet);
+        triple<byte[], byte[], byte[]> t = base58.check_decode(w, prefix.length, suffix.length, hash_len, f);
+        byte[] b = t.l, p = t.r, s = t.t;
         if (!bytes.equ(p, prefix)) throw new IllegalArgumentException("Invalid prefix");
+        if (!bytes.equ(s, suffix)) throw new IllegalArgumentException("Invalid suffix");
         return b;
     }
 
@@ -546,6 +559,7 @@ public class wallet {
             case "blake160": b = hashing.blake160(b); break;
             case "keccak256": b = hashing.keccak256(b); break;
             case "securehash": b = hashing.securehash(b); break;
+            case "addresshash": b = hashing.addresshash(b); break;
             default: throw new IllegalStateException("Unknown hash function");
         }
         boolean reverse = coins.attr("address.hashing.reverse", false, coin, testnet);

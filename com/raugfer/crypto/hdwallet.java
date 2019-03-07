@@ -37,7 +37,7 @@ public class hdwallet {
         else {
             throw new IllegalStateException("Unknown hashing function");
         }
-        return base58.check_encode(t, version, f);
+        return base58.check_encode(t, version, new byte[]{ }, f);
     }
 
     public static Object[] xprivatekey_decode(String w, String coin, boolean testnet) {
@@ -57,7 +57,7 @@ public class hdwallet {
         else {
             throw new IllegalStateException("Unknown hashing function");
         }
-        pair<byte[], byte[]> t = base58.check_decode(w, version.length, hash_len, f);
+        triple<byte[], byte[], byte[]> t = base58.check_decode(w, version.length, 0, hash_len, f);
         byte[] b = t.l, v = t.r;
         if (!bytes.equ(v, version)) throw new IllegalArgumentException("Invalid prefix");
         if (b.length != 74) throw new IllegalArgumentException("Invalid length");
@@ -155,7 +155,7 @@ public class hdwallet {
         else {
             throw new IllegalStateException("Unknown hashing function");
         }
-        return base58.check_encode(t, version, f);
+        return base58.check_encode(t, version, new byte[]{ }, f);
     }
 
     public static Object[] xpublickey_decode(String w, String coin, boolean testnet) {
@@ -175,7 +175,7 @@ public class hdwallet {
         else {
             throw new IllegalStateException("Unknown hashing function");
         }
-        pair<byte[], byte[]> t = base58.check_decode(w, version.length, hash_len, f);
+        triple<byte[], byte[], byte[]> t = base58.check_decode(w, version.length, 0, hash_len, f);
         byte[] b = t.l, v = t.r;
         if (!bytes.equ(v, version)) throw new IllegalArgumentException("Invalid prefix");
         if (b.length != 74) throw new IllegalArgumentException("Invalid length");

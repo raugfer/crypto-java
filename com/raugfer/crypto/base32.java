@@ -43,29 +43,33 @@ public class base32 {
     }
 
     public static String check_encode(byte[] b) {
-        return check_encode(b, new byte[]{ }, null);
+        return check_encode(b, new byte[]{ }, new byte[]{ });
     }
 
-    public static String check_encode(byte[] b, byte[] prefix, hashing.hashfun f) {
+    public static String check_encode(byte[] b, byte[] prefix, byte[] suffix) {
+        return check_encode(b, prefix, suffix, null);
+    }
+
+    public static String check_encode(byte[] b, byte[] prefix, byte[] suffix, hashing.hashfun f) {
         if (f == null) f = base32::_rev_blake2b_5;
-        b = bytes.concat(prefix, b);
+        b = bytes.concat(prefix, b, suffix);
         byte[] h = f.hash(b);
         b = bytes.concat(b, h);
         return encode(b);
     }
 
-    public static pair<byte[], byte[]> check_decode(String w) {
-        return check_decode(w, 0);
+    public static triple<byte[], byte[], byte[]> check_decode(String w) {
+        return check_decode(w, 0, 0);
     }
 
-    public static pair<byte[], byte[]> check_decode(String w, int prefix_len) {
-        return check_decode(w, prefix_len, 5, null);
+    public static triple<byte[], byte[], byte[]> check_decode(String w, int prefix_len, int suffix_len) {
+        return check_decode(w, prefix_len, suffix_len, 5, null);
     }
 
-    public static pair<byte[], byte[]> check_decode(String w, int prefix_len, int hash_len, hashing.hashfun f) {
+    public static triple<byte[], byte[], byte[]> check_decode(String w, int prefix_len, int suffix_len, int hash_len, hashing.hashfun f) {
         if (f == null) f = base32::_rev_blake2b_5;
         byte[] b = decode(w);
-        if (b.length < prefix_len + hash_len) throw new IllegalArgumentException("Invalid length");
+        if (b.length < prefix_len + suffix_len + hash_len) throw new IllegalArgumentException("Invalid length");
         if (hash_len == 0) hash_len = -b.length;
         byte[] h = bytes.sub(b, -hash_len);
         b = bytes.sub(b, 0, -hash_len);
@@ -76,7 +80,10 @@ public class base32 {
         }
         byte[] prefix = bytes.sub(b, 0, prefix_len);
         b = bytes.sub(b, prefix_len);
-        return new pair<>(b, prefix);
+        if (suffix_len == 0) suffix_len = -b.length;
+        byte[] suffix = bytes.sub(b, -suffix_len);
+        b = bytes.sub(b, 0, -suffix_len);
+        return new triple<>(b, prefix, suffix);
     }
 
     public static String translate(String w, String from_digits, String to_digits) {

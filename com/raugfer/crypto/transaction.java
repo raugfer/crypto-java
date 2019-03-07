@@ -1646,6 +1646,11 @@ public class transaction {
             txn = transaction_encode(fields, coin, testnet);
             txn = bytes.sub(txn, 1);
         }
+        if (txnfmt.equals("cbor")) {
+            dict fields = transaction_decode(txn, coin, testnet);
+            if (fields.has("witnesses")) fields.del("witnesses");
+            txn = transaction_encode(fields, coin, testnet);
+        }
         String fun = coins.attr("transaction.hashing", coin, testnet);
         byte[] prefix = coins.attr("transaction.hashing.prefix", new byte[]{ }, coin, testnet);
         byte[] b;
@@ -2127,6 +2132,39 @@ public class transaction {
             txn = bytes.sub(txn, 1);
             byte[] signature = signing.signature_create(privatekey, txn, null, coin, testnet);
             fields.put("signature", signature);
+            return transaction_encode(fields, coin, testnet);
+        }
+        if (fmt.equals("cbor")) {
+            dict fields = transaction_decode(txn, coin, testnet);
+            if (fields.has("witnesses")) fields.del("witnesses");
+            txn = transaction_encode(fields, coin, testnet);
+            dict[] inputs = fields.get("inputs");
+            if (!(params instanceof Object[])) {
+                Object[] t = new Object[inputs.length];
+                for (int i = 0; i < t.length; i++) t[i] = params;
+                params = t;
+            }
+            Object[] _params = (Object[]) params;
+            dict[] witnesses = new dict[inputs.length];
+            for (int i = 0; i < inputs.length; i++) {
+                Object param = _params[i];
+                String privatekey = null;
+                if (param instanceof String) {
+                    privatekey = (String) param;
+                }
+                if (param instanceof Object[]) {
+                    Object[] tuple = (Object[]) param;
+                    privatekey = (String) tuple[0];
+                }
+                String publickey = wallet.publickey_from_privatekey(privatekey, coin, testnet);
+                byte[] signature = signing.signature_create(privatekey, txn, null, coin, testnet);
+                dict witness = new dict();
+                witness.put("publickey", publickey);
+                witness.put("chaincode", binint.b2h(new byte[32]));
+                witness.put("signature", signature);
+                witnesses[i] = witness;
+            }
+            fields.put("witnesses", witnesses);
             return transaction_encode(fields, coin, testnet);
         }
         throw new IllegalStateException("Unknown format");
