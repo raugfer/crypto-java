@@ -1651,8 +1651,8 @@ public class transaction {
             dict fields = new dict();
             Object[] data = (Object[]) cbor.loads(txn);
             if (data.length == 2) {
-                data = (Object[]) data[0];
                 Object[] witnesses = (Object[]) data[1];
+                data = (Object[]) data[0];
                 dict[] wits = new dict[witnesses.length];
                 for (int i = 0; i < witnesses.length; i++) {
                     Object[] witness = (Object[]) witnesses[i];
