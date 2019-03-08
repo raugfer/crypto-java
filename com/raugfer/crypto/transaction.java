@@ -930,6 +930,42 @@ public class transaction {
             byte[] b12 = b_signature;
             return bytes.concat(b0, bytes.concat(b1, b2, b3, b4, b5, b6), bytes.concat(b7, b8, b9, b10, b11, b12));
         }
+        if (fmt.equals("cbor")) {
+            dict[] ins = fields.get("inputs");
+            List<Object> inputs = new ArrayList<>();
+            for (dict in : ins) {
+                String txnid = in.get("txnid");
+                BigInteger index = in.get("index", BigInteger.ZERO);
+                Object pair = new Object[]{ binint.h2b(txnid), index };
+                Object item = new Object[]{ BigInteger.ZERO, new cbor.Tag(BigInteger.valueOf(24), cbor.dumps(pair)) };
+                inputs.add(item);
+            }
+            dict[] outs = fields.get("outputs");
+            List<Object> outputs = new ArrayList<>();
+            for (dict out : outs) {
+                BigInteger amount = out.get("amount", BigInteger.ZERO);
+                String address = out.get("address");
+                Object struct = cbor.loads(base58.decode(address));
+                Object item = new Object[]{ struct, amount };
+                outputs.add(item);
+            }
+            Object data = new Object[]{ inputs, outputs, new HashMap<>() };
+            if (fields.has("witnesses")) {
+                dict[] wits = fields.get("witnesses");
+                Object[] witnesses = new Object[wits.length];
+                for (int i = 0; i < wits.length; i++) {
+                    dict wit = wits[i];
+                    String publickey = wit.get("publickey");
+                    String chaincode = wit.get("chaincode");
+                    byte[] signature = wit.get("signature");
+                    Object pair = new Object[]{ binint.h2b(publickey + chaincode), signature };
+                    Object item = new Object[]{ BigInteger.ZERO, new cbor.Tag(BigInteger.valueOf(24), cbor.dumps(pair)) };
+                    witnesses[i] = item;
+                }
+                data = new Object[]{ data, witnesses };
+            }
+            return cbor.dumps(data);
+        }
         throw new IllegalStateException("Unknown format");
     }
 
@@ -1609,6 +1645,74 @@ public class transaction {
             fields.put("recipient", recipient);
             if (attachment.length() > 0) fields.put("attachment", attachment);
             if (signature != null) fields.put("signature", signature);
+            return fields;
+        }
+        if (fmt.equals("cbor")) {
+            dict fields = new dict();
+            Object[] data = (Object[]) cbor.loads(txn);
+            if (data.length == 2) {
+                data = (Object[]) data[0];
+                Object[] witnesses = (Object[]) data[1];
+                dict[] wits = new dict[witnesses.length];
+                for (int i = 0; i < witnesses.length; i++) {
+                    Object[] witness = (Object[]) witnesses[i];
+                    if (witness.length != 2) throw new IllegalArgumentException("Invalid input");
+                    BigInteger typ = (BigInteger) witness[0];
+                    cbor.Tag obj = (cbor.Tag) witness[1];
+                    if (typ.compareTo(BigInteger.ZERO) != 0) throw new IllegalArgumentException("Unknown type");
+                    if (obj.tag.compareTo(BigInteger.valueOf(24)) != 0) throw new IllegalArgumentException("Unknown tag");
+                    Object[] r = (Object[]) cbor.loads((byte[]) obj.value);
+                    if (r.length != 2) throw new IllegalArgumentException("Invalid input");
+                    byte[] b = (byte[]) r[0];
+                    byte[] signature = (byte[]) r[1];
+                    dict wit = new dict();
+                    wit.put("publickey", binint.b2h(bytes.sub(b, 0, 32)));
+                    wit.put("chaincode", binint.b2h(bytes.sub(b, 32)));
+                    wit.put("signature", signature);
+                    wits[i] = wit;
+                }
+                fields.put("witnesses", wits);
+            }
+            List<Object> inputs = (List<Object>) data[0];
+            dict[] ins = new dict[inputs.size()];
+            for (int i = 0; i < inputs.size(); i++) {
+                Object[] input = (Object[]) inputs.get(i);
+                if (input.length != 2) throw new IllegalArgumentException("Invalid input");
+                BigInteger typ = (BigInteger) input[0];
+                cbor.Tag obj = (cbor.Tag) input[1];
+                if (typ.compareTo(BigInteger.ZERO) != 0) throw new IllegalArgumentException("Unknown type");
+                if (obj.tag.compareTo(BigInteger.valueOf(24)) != 0) throw new IllegalArgumentException("Unknown tag");
+                Object[] r = (Object[]) cbor.loads((byte[]) obj.value);
+                byte[] b = (byte[]) r[0];
+                BigInteger index = (BigInteger) r[1];
+                dict in = new dict();
+                in.put("txnid", binint.b2h(b));
+                in.put("index", index);
+                ins[i] = in;
+            }
+            fields.put("inputs", ins);
+            List<Object> outputs = (List<Object>) data[1];
+            dict[] outs = new dict[outputs.size()];
+            for (int i = 0; i < outputs.size(); i++) {
+                Object[] output = (Object[]) outputs.get(i);
+                if (output.length != 2) throw new IllegalArgumentException("Invalid input");
+                Object[] struct = (Object[]) output[0];
+                BigInteger amount = (BigInteger) output[1];
+                if (struct.length != 2) throw new IllegalArgumentException("Invalid input");
+                cbor.Tag obj = (cbor.Tag) struct[0];
+                BigInteger checksum = (BigInteger) struct[1];
+                if (obj.tag.compareTo(BigInteger.valueOf(24)) != 0) throw new IllegalArgumentException("Unknown tag");
+                BigInteger expected_checksum = binint.b2n(crc32.crc32xmodem((byte[]) obj.value));
+                if (checksum.compareTo(expected_checksum) != 0) throw new IllegalArgumentException("Inconsistent checksum");
+                String address = base58.encode(cbor.dumps(struct));
+                dict out = new dict();
+                out.put("address", address);
+                out.put("amount", amount);
+                outs[i] = out;
+            }
+            fields.put("outputs", outs);
+            Map<Object, Object> attrs = (Map<Object, Object>) data[2];
+            if (attrs.size() > 0) throw new IllegalArgumentException("Unsupported attributes");
             return fields;
         }
         throw new IllegalStateException("Unknown format");
