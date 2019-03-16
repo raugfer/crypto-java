@@ -966,6 +966,38 @@ public class transaction {
             }
             return cbor.dumps(data);
         }
+        if (fmt.equals("protobuf")) {
+            pair<BigInteger, String> r1 = wallet.address_decode(fields.get("owner_address"), coin, testnet);
+            BigInteger h1 = r1.l;
+            String kind1 = r1.r;
+            byte[] prefix1 = coins.attr(kind1 + ".base58.prefix", coin, testnet);
+            pair<BigInteger, String> r2 = wallet.address_decode(fields.get("to_address"), coin, testnet);
+            BigInteger h2 = r2.l;
+            String kind2 = r2.r;
+            byte[] prefix2 = coins.attr(kind2 + ".base58.prefix", coin, testnet);
+            Map<Integer, Object> message_params = new HashMap<>();
+            message_params.put(1, bytes.concat(prefix1, binint.n2b(h1, 20)));
+            message_params.put(2, bytes.concat(prefix2, binint.n2b(h2, 20)));
+            message_params.put(3, fields.get("amount"));
+            Map<Integer, Object> message = new HashMap<>();
+            message.put(1, "type.googleapis.com/protocol.TransferContract".getBytes());
+            message.put(2, message_params);
+            Map<Integer, Object> contract = new HashMap<>();
+            contract.put(1, BigInteger.ONE);
+            contract.put(2, message);
+            Map<Integer, Object> data = new HashMap<>();
+            data.put(1, fields.get("ref_block_bytes"));
+            data.put(4, fields.get("ref_block_hash"));
+            data.put(8, fields.get("expiration"));
+            data.put(11, contract);
+            if (fields.has("signature")) {
+                Map<Integer, Object> signed_data = new HashMap<>();
+                signed_data.put(1, data);
+                signed_data.put(2, fields.get("signature"));
+                data = signed_data;
+            }
+            return protobuf.dumps(data);
+        }
         throw new IllegalStateException("Unknown format");
     }
 
@@ -1715,6 +1747,48 @@ public class transaction {
             if (attrs.size() > 0) throw new IllegalArgumentException("Unsupported attributes");
             return fields;
         }
+        if (fmt.equals("protobuf")) {
+            Map<Integer, Object> meta_1 = new HashMap<>();
+            Map<Integer, Object> meta_2 = new HashMap<>();
+            meta_2.put(2, meta_1);
+            Map<Integer, Object> meta_3 = new HashMap<>();
+            meta_3.put(2, meta_2);
+            Map<Integer, Object> meta = new HashMap<>();
+            meta.put(11, meta_3);
+            dict fields = new dict();
+            Map<Integer, Object> data = (Map<Integer, Object>) protobuf.loads(txn, meta);
+            if (!data.containsKey(11)) {
+                fields.put("signature", data.get(2));
+                data = (Map<Integer, Object>) protobuf.loads((byte[]) data.get(1), meta);
+            }
+            fields.put("ref_block_bytes", data.get(1));
+            fields.put("ref_block_hash", data.get(4));
+            fields.put("expiration", data.get(8));
+            Map<Integer, Object> contract = (Map<Integer, Object>) data.get(11);
+            BigInteger contract_type = (BigInteger) contract.get(1);
+            if (contract_type.compareTo(BigInteger.ONE) != 0) throw new IllegalArgumentException("Unsupported contract type");
+            Map<Integer, Object> message = (Map<Integer, Object>) contract.get(2);
+            byte[] message_type = (byte[]) message.get(1);
+            if (!bytes.equ(message_type, "type.googleapis.com/protocol.TransferContract".getBytes())) throw new IllegalArgumentException("Unsupported message type");
+            Map<Integer, Object> message_params = (Map<Integer, Object>) message.get(2);
+            String[] kinds = coins.attr("address.kinds", new String[]{ "address" }, coin, testnet);
+            byte[] owner_address = (byte[]) message_params.get(1);
+            for (String kind : kinds) {
+                byte[] prefix = coins.attr(kind + ".base58.prefix", coin, testnet);
+                if (!bytes.equ(bytes.sub(owner_address, 0, prefix.length), prefix)) continue;
+                fields.put("owner_address", wallet.address_encode(binint.b2n(bytes.sub(owner_address, prefix.length)), kind, coin, testnet));
+            }
+            if (!fields.has("owner_address")) throw new IllegalArgumentException("Unsupported owner address");
+            byte[] to_address = (byte[]) message_params.get(2);
+            for (String kind : kinds) {
+                byte[] prefix = coins.attr(kind + ".base58.prefix", coin, testnet);
+                if (!bytes.equ(bytes.sub(to_address, 0, prefix.length), prefix)) continue;
+                fields.put("to_address", wallet.address_encode(binint.b2n(bytes.sub(to_address, prefix.length)), kind, coin, testnet));
+            }
+            if (!fields.has("to_address")) throw new IllegalArgumentException("Unsupported to address");
+            fields.put("amount", message_params.get(3));
+            return fields;
+        }
         throw new IllegalStateException("Unknown format");
     }
 
@@ -1753,6 +1827,11 @@ public class transaction {
         if (txnfmt.equals("cbor")) {
             dict fields = transaction_decode(txn, coin, testnet);
             if (fields.has("witnesses")) fields.del("witnesses");
+            txn = transaction_encode(fields, coin, testnet);
+        }
+        if (txnfmt.equals("protobuf")) {
+            dict fields = transaction_decode(txn, coin, testnet);
+            if (fields.has("signature")) fields.del("signature");
             txn = transaction_encode(fields, coin, testnet);
         }
         String fun = coins.attr("transaction.hashing", coin, testnet);
@@ -2269,6 +2348,15 @@ public class transaction {
                 witnesses[i] = witness;
             }
             fields.put("witnesses", witnesses);
+            return transaction_encode(fields, coin, testnet);
+        }
+        if (fmt.equals("protobuf")) {
+            dict fields = transaction_decode(txn, coin, testnet);
+            if (fields.has("signature")) fields.del("signature");
+            String privatekey = (String) params;
+            txn = transaction_encode(fields, coin, testnet);
+            byte[] signature = signing.signature_create(privatekey, txn, null, coin, testnet);
+            fields.put("signature", signature);
             return transaction_encode(fields, coin, testnet);
         }
         throw new IllegalStateException("Unknown format");

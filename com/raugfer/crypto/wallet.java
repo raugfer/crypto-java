@@ -543,8 +543,8 @@ public class wallet {
         else {
             throw new IllegalStateException("Unknown curve");
         }
-        String fmt = coins.attr("address.format", coin, testnet);
-        if (fmt.equals("hexmix")) {
+        boolean raw = coins.attr("address.hashing.raw", false, coin, testnet);
+        if (raw) {
             BigInteger x = P[0], y = P[1];
             b = bytes.concat(binint.n2b(x, 32), binint.n2b(y, 32));
         }

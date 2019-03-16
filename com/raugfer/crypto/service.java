@@ -110,6 +110,9 @@ public class service {
             }
             return estimatefee;
         }
+        if (fmt.equals("protobuf")) {
+            return BigInteger.ZERO;
+        }
         throw new IllegalArgumentException("Unknown format");
     }
 
@@ -513,6 +516,23 @@ public class service {
             dict fields = new dict();
             fields.put("inputs", inputs);
             fields.put("outputs", outputs);
+            byte[] txn = transaction.transaction_encode(fields, coin, testnet);
+            return new pair<>(new byte[][]{ txn }, f);
+        }
+        if (fmt.equals("protobuf")) {
+            dict block = (dict) cb.custom_call("block", null, coin, testnet);
+            byte[] ref_block_bytes = bytes.sub(binint.n2b(block.get("height"), 8), 6, 8);
+            byte[] ref_block_hash = bytes.sub(binint.h2b(block.get("hash")), 8, 16);
+            BigInteger expiration = ((BigInteger)block.get("timestamp")).add(BigInteger.valueOf(5 * 60 * 1000));
+            String source_address = source_addresses[0];
+            context f = (lookup) -> lookup.call(source_address);
+            dict fields = new dict();
+            fields.put("ref_block_bytes", ref_block_bytes);
+            fields.put("ref_block_hash", ref_block_hash);
+            fields.put("expiration", expiration);
+            fields.put("owner_address", source_address);
+            fields.put("to_address", address);
+            fields.put("amount", amount);
             byte[] txn = transaction.transaction_encode(fields, coin, testnet);
             return new pair<>(new byte[][]{ txn }, f);
         }

@@ -214,6 +214,7 @@ public class coins {
         attrs.put("publickey.format", "hex");
         attrs.put("address.format", "hexmix");
         attrs.put("address.hashing", "keccak256");
+        attrs.put("address.hashing.raw", true);
         attrs.put("address.prefix", "0x");
         attrs.put("address.mode", "account");
         attrs.put("xprivatekey.base58.prefix", (_testnetfun) (testnet -> testnet
@@ -498,6 +499,37 @@ public class coins {
         attrs.put("block.time", 5);
         attrs.put("decimals", 7);
         coins.put("stellar", attrs);
+    }
+
+    static {
+        dict attrs = new dict();
+        attrs.put("ecc.curve", "secp256k1");
+        attrs.put("base58.check", "hash256:4");
+        attrs.put("privatekey.format", "hex");
+        attrs.put("publickey.format", "sec2");
+        attrs.put("address.format", "base58");
+        attrs.put("address.hashing", "keccak256");
+        attrs.put("address.hashing.raw", true);
+        attrs.put("address.mode", "account");
+        attrs.put("address.base58.prefix", new byte[]{ (byte)0x41 });
+        attrs.put("xprivatekey.base58.prefix", (_testnetfun) (testnet -> testnet
+                ? new byte[]{ (byte)0x04, (byte)0x35, (byte)0x83, (byte)0x94 }
+                : new byte[]{ (byte)0x04, (byte)0x88, (byte)0xad, (byte)0xe4 }
+        ));
+        attrs.put("xpublickey.base58.prefix", (_testnetfun) (testnet -> testnet
+                ? new byte[]{ (byte)0x04, (byte)0x35, (byte)0x87, (byte)0xcf }
+                : new byte[]{ (byte)0x04, (byte)0x88, (byte)0xb2, (byte)0x1e }
+        ));
+        attrs.put("hdwallet.coin_type", 195);
+        attrs.put("transaction.format", "protobuf");
+        attrs.put("transaction.hashing", "sha256");
+        attrs.put("signature.format", "rec");
+        attrs.put("signature.hashing", "sha256");
+        attrs.put("account.reserved", 1000000);
+        attrs.put("confirmations", 20);
+        attrs.put("block.time", 15);
+        attrs.put("decimals", 6);
+        coins.put("tron", attrs);
     }
 
     static {
