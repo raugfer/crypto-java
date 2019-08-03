@@ -631,6 +631,14 @@ public class coins {
         dict attrs = new dict();
         attrs.put("overloads", "ethereum");
         attrs.put("transfer.gaslimit", 150000);
+        attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x40b329333e1cea0235f6a44a92e29fd6d6ab5184" : "0x514910771af9ca656af840dff83e8264ecf986ca"));
+        coins.put("chainlink", attrs);
+    }
+
+    static {
+        dict attrs = new dict();
+        attrs.put("overloads", "ethereum");
+        attrs.put("transfer.gaslimit", 150000);
         attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x5a89997f38429b5866809dc40a6d677c521ebab9" : "0x89d24a6b4ccb1b6faa2625fe562bdd9a23260359"));
         coins.put("dai", attrs);
     }
