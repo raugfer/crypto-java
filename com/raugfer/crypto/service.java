@@ -36,7 +36,7 @@ public class service {
             BigInteger balance = BigInteger.ZERO;
             BigInteger estimatefee = BigInteger.ZERO;
             for (int i = 1; i <= utxos.length; i++) {
-                int estimatesize = 4 + (1 + i * (32 + 4 + (1 + (1 + 73) + (1 + 33)) + 4)) + (1 + 2 * (8 + (1 + 25))) + 4;
+                int estimatesize = 4 + (1 + i * (32 + 4 + (1 + (1 + 72) + (1 + 33)) + 4)) + (1 + 2 * (8 + (1 + 25))) + 4;
                 estimatefee = fee.multiply(BigInteger.valueOf(estimatesize)).shiftRight(10);
                 balance = balance.add((BigInteger) utxos[i-1].get("amount"));
                 if (balance.compareTo(amount.add(estimatefee)) >= 0) break;

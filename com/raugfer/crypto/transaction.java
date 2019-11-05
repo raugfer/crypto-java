@@ -265,6 +265,19 @@ public class transaction {
         throw new IllegalArgumentException("Unknown type");
     }
 
+    private static byte[] trim_leading_zeroes(byte[] bytes) {
+        int offset = 0;
+        for (; offset < bytes.length - 1; offset++) {
+            if (bytes[offset] != (byte) 0) {
+                break;
+            }
+        }
+        int newLength = bytes.length - offset;
+        byte[] copy = new byte[newLength];
+        System.arraycopy(bytes, offset, copy, 0, newLength);
+        return copy;
+    }
+
     private static final String[][] RIPPLE_FIELDS = {
         {"1", "2", "TransactionType"},
         {"2", "2", "Flags"},
@@ -729,8 +742,8 @@ public class transaction {
             l[5] = data;
             if (signed) {
                 l[6] = v;
-                l[7] = r;
-                l[8] = s;
+                l[7] = trim_leading_zeroes(r);
+                l[8] = trim_leading_zeroes(s);
             }
             return rlp(l);
         }
