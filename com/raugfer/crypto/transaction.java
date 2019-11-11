@@ -265,19 +265,6 @@ public class transaction {
         throw new IllegalArgumentException("Unknown type");
     }
 
-    private static byte[] trim_leading_zeroes(byte[] bytes) {
-        int offset = 0;
-        for (; offset < bytes.length - 1; offset++) {
-            if (bytes[offset] != (byte) 0) {
-                break;
-            }
-        }
-        int newLength = bytes.length - offset;
-        byte[] copy = new byte[newLength];
-        System.arraycopy(bytes, offset, copy, 0, newLength);
-        return copy;
-    }
-
     private static final String[][] RIPPLE_FIELDS = {
         {"1", "2", "TransactionType"},
         {"2", "2", "Flags"},
@@ -741,9 +728,9 @@ public class transaction {
             l[4] = nlzint(value);
             l[5] = data;
             if (signed) {
-                l[6] = v;
-                l[7] = trim_leading_zeroes(r);
-                l[8] = trim_leading_zeroes(s);
+                l[6] = nlzint(binint.b2n(v));
+                l[7] = nlzint(binint.b2n(r));
+                l[8] = nlzint(binint.b2n(s));
             }
             return rlp(l);
         }
@@ -1380,9 +1367,9 @@ public class transaction {
             fields.put("value", parse_nlzint((byte[]) l[4]).l);
             fields.put("data", l[5]);
             if (l.length > 6) {
-                fields.put("v", l[6]);
-                fields.put("r", l[7]);
-                fields.put("s", l[8]);
+                fields.put("v", binint.n2b(parse_nlzint((byte[]) l[6]).l, 1));
+                fields.put("r", binint.n2b(parse_nlzint((byte[]) l[7]).l, 32));
+                fields.put("s", binint.n2b(parse_nlzint((byte[]) l[8]).l, 32));
             }
             return fields;
         }
