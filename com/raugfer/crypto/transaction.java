@@ -728,9 +728,9 @@ public class transaction {
             l[4] = nlzint(value);
             l[5] = data;
             if (signed) {
-                l[6] = v;
-                l[7] = r;
-                l[8] = s;
+                l[6] = nlzint(binint.b2n(v));
+                l[7] = nlzint(binint.b2n(r));
+                l[8] = nlzint(binint.b2n(s));
             }
             return rlp(l);
         }
@@ -1367,9 +1367,9 @@ public class transaction {
             fields.put("value", parse_nlzint((byte[]) l[4]).l);
             fields.put("data", l[5]);
             if (l.length > 6) {
-                fields.put("v", l[6]);
-                fields.put("r", l[7]);
-                fields.put("s", l[8]);
+                fields.put("v", binint.n2b(parse_nlzint((byte[]) l[6]).l, 1));
+                fields.put("r", binint.n2b(parse_nlzint((byte[]) l[7]).l, 32));
+                fields.put("s", binint.n2b(parse_nlzint((byte[]) l[8]).l, 32));
             }
             return fields;
         }

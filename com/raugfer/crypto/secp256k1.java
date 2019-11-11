@@ -133,7 +133,7 @@ public class secp256k1 {
         if (!rng(h)) throw new IllegalArgumentException("Out of range");
         BigInteger r = (BigInteger) S[0];
         BigInteger s = (BigInteger) S[1];
-        boolean odd = (boolean) S[3];
+        boolean odd = (boolean) S[2];
         if (!rng(r)) throw new IllegalArgumentException("Out of range");
         if (!rng(s)) throw new IllegalArgumentException("Out of range");
         if (s.compareTo(n.shiftRight(2)) > 0) throw new IllegalArgumentException("Out of range");
