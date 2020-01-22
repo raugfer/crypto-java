@@ -136,7 +136,7 @@ public class nist256p1 {
         boolean odd = (boolean) S[2];
         if (!rng(r)) throw new IllegalArgumentException("Out of range");
         if (!rng(s)) throw new IllegalArgumentException("Out of range");
-        if (s.compareTo(n.shiftRight(2)) > 0) throw new IllegalArgumentException("Out of range");
+        if (s.compareTo(n.shiftRight(1)) > 0) throw new IllegalArgumentException("Out of range");
         BigInteger[] R = { r, fnd(r, odd) };
         BigInteger z = h.negate().mod(n);
         BigInteger invr = r.modPow(n.subtract(BigInteger.valueOf(2)), n);

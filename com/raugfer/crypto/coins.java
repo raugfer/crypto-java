@@ -579,7 +579,7 @@ public class coins {
         attrs.put("transaction.version", 0x80000004);
         attrs.put("transaction.groupid", 0x892f2085);
         attrs.put("signature.hashing", "blake2b256");
-        attrs.put("signature.hashing.prefix", bytes.concat("ZcashSigHash".getBytes(), new byte[]{ (byte)0xbb, (byte)0x09, (byte)0xb8, (byte)0x76 }));
+        attrs.put("signature.hashing.prefix", bytes.concat("ZcashSigHash".getBytes(), new byte[]{ (byte)0x60, (byte)0x0e, (byte)0xb4, (byte)0x2b }));
         attrs.put("sighash.method", "sapling");
         attrs.put("confirmations", 20);
         attrs.put("block.time", 5 * 30);
