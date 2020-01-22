@@ -120,7 +120,7 @@ public class secp256k1 {
         BigInteger s = (BigInteger) S[1];
         if (!rng(r)) throw new IllegalArgumentException("Out of range");
         if (!rng(s)) throw new IllegalArgumentException("Out of range");
-        if (s.compareTo(n.shiftRight(2)) > 0) throw new IllegalArgumentException("Out of range");
+        if (s.compareTo(n.shiftRight(1)) > 0) throw new IllegalArgumentException("Out of range");
         BigInteger w = s.modPow(n.subtract(BigInteger.valueOf(2)), n);
         BigInteger u = h.multiply(w).mod(n), v = r.multiply(w).mod(n);
         BigInteger[] Q = add(mul(G, u), mul(P, v));

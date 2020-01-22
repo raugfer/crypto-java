@@ -639,7 +639,7 @@ public class coins {
         dict attrs = new dict();
         attrs.put("overloads", "ethereum");
         attrs.put("transfer.gaslimit", 150000);
-        attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x5a89997f38429b5866809dc40a6d677c521ebab9" : "0x89d24a6b4ccb1b6faa2625fe562bdd9a23260359"));
+        attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x1f1cb7a560db6e7cbdff2e6ec4544834acf2cfde" : "0x6b175474e89094c44da98b954eedeac495271d0f"));
         coins.put("dai", attrs);
     }
 
@@ -673,6 +673,14 @@ public class coins {
         attrs.put("transfer.gaslimit", 150000);
         attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0xdf47bd229d3b2789e0ecb598c1f80910c5392f73" : "0xd26114cd6EE289AccF82350c8d8487fedB8A0C07"));
         coins.put("omisego", attrs);
+    }
+
+    static {
+        dict attrs = new dict();
+        attrs.put("overloads", "ethereum");
+        attrs.put("transfer.gaslimit", 150000);
+        attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x5a89997f38429b5866809dc40a6d677c521ebab9" : "0x89d24a6b4ccb1b6faa2625fe562bdd9a23260359"));
+        coins.put("sai", attrs);
     }
 
     static {
