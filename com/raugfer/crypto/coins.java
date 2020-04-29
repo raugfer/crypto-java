@@ -589,6 +589,38 @@ public class coins {
 
     static {
         dict attrs = new dict();
+        attrs.put("overloads", "neo");
+        attrs.put("transaction.format", "ontologytx");
+        attrs.put("signature.hashing", "sha256hash256");
+        attrs.put("confirmations", 10);
+        attrs.put("block.time", 15);
+        attrs.put("decimals", 0);
+        attrs.put("transfer.gaslimit", 20000);
+        attrs.put("transfer.gasprice", 500);
+        attrs.put("contract.address", new byte[]{
+                (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+                (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+                (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+                (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x01
+        });
+        coins.put("ontology", attrs);
+    }
+
+    static {
+        dict attrs = new dict();
+        attrs.put("overloads", "ontology");
+        attrs.put("decimals", 9);
+        attrs.put("contract.address", new byte[]{
+                (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+                (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+                (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+                (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x02
+        });
+        coins.put("ontologygas", attrs);
+    }
+
+    static {
+        dict attrs = new dict();
         attrs.put("overloads", "ethereum");
         attrs.put("transfer.gaslimit", 150000);
         attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0xfb04393b9a8a59d7b6228fe544ae89d9064419fd" : "0xe41d2489571d322189246dafa5ebde1f4699f498"));

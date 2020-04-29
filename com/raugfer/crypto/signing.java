@@ -122,6 +122,7 @@ public class signing {
             case "sha512h": b = hashing.sha512h(bytes.concat(prefix, data)); break;
             case "blake1s": b = hashing.blake1s(bytes.concat(prefix, data)); break;
             case "blake2b256": b = hashing.blake2b(data, prefix, 32); break;
+            case "sha256hash256": b = hashing.sha256(hashing.hash256(bytes.concat(prefix, data))); break;
             default: throw new IllegalStateException("Unknown hash function");
         }
         byte[] envelop_prefix = coins.attr("signature.hashing.envelop.prefix", new byte[]{ }, coin, testnet);
