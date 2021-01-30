@@ -654,6 +654,15 @@ public class coins {
     static {
         dict attrs = new dict();
         attrs.put("overloads", "ethereum");
+        attrs.put("decimals", 2);
+        attrs.put("transfer.gaslimit", 150000);
+        attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x6b4159cb8f3bb460e3fed5fd145c7d8312a8b980" : "0x056fd409e1d7a124bd7017459dfea2f387b6d5cd"));
+        coins.put("geminidollar", attrs);
+    }
+
+    static {
+        dict attrs = new dict();
+        attrs.put("overloads", "ethereum");
         attrs.put("transfer.gaslimit", 150000);
         attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x47a4cd1239d3e89ba2767d9bbd188ab6dcca39ed" : "0xa74476443119A942dE498590Fe1f2454d7D4aC0d"));
         coins.put("golem", attrs);
@@ -689,6 +698,33 @@ public class coins {
         attrs.put("transfer.gaslimit", 150000);
         attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0xfa4ff93882d2035661e90763cc2cd92ffeca7cb3" : "0x744d70fdbe2ba4cf95131626614a1763df805b9e"));
         coins.put("status", attrs);
+    }
+
+    static {
+        dict attrs = new dict();
+        attrs.put("overloads", "ethereum");
+        attrs.put("decimals", 6);
+        attrs.put("transfer.gaslimit", 150000);
+        attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x6ee856ae55b6e1a249f04cd3b947141bc146273c" : "0xdac17f958d2ee523a2206206994597c13d831ec7"));
+        coins.put("tether", attrs);
+    }
+
+    static {
+        dict attrs = new dict();
+        attrs.put("overloads", "ethereum");
+        attrs.put("decimals", 6);
+        attrs.put("transfer.gaslimit", 150000);
+        attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0xb37a76e727ad2c2dd09549cf30ef4433e2ee87a1" : "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"));
+        coins.put("usdcoin", attrs);
+    }
+
+    static {
+        dict attrs = new dict();
+        attrs.put("overloads", "ethereum");
+        attrs.put("decimals", 8);
+        attrs.put("transfer.gaslimit", 150000);
+        attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x65058d7081fcdc3cd8727dbb7f8f9d52cefdd291" : "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599"));
+        coins.put("wrappedbitcoin", attrs);
     }
 
     static {
