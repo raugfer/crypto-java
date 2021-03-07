@@ -250,6 +250,16 @@ public class coins {
 
     static {
         dict attrs = new dict();
+        attrs.put("overloads", "ethereum");
+        attrs.put("hdwallet.coin_type", 60); // may change in the future
+        attrs.put("chain.id", (_testnetfun) (testnet -> testnet ? 4002 : 250));
+        attrs.put("confirmations", 36);
+        attrs.put("transfer.gaslimit", 21000);
+        coins.put("fantom", attrs);
+    }
+
+    static {
+        dict attrs = new dict();
         attrs.put("ecc.curve", "ed25519");
         attrs.put("privatekey.format", "sec2");
         attrs.put("publickey.format", "sec2");
