@@ -6,6 +6,17 @@ public class coins {
 
     static {
         dict attrs = new dict();
+        attrs.put("overloads", "ethereum");
+        attrs.put("hdwallet.coin_type", 714);
+        attrs.put("chain.id", (_testnetfun) (testnet -> testnet ? 97 : 56));
+        attrs.put("confirmations", 15);
+        attrs.put("block.time", 3);
+        attrs.put("transfer.gaslimit", 21000);
+        coins.put("binancecoin", attrs);
+    }
+
+    static {
+        dict attrs = new dict();
         attrs.put("ecc.curve", "secp256k1");
         attrs.put("base58.check", "hash256:4");
         attrs.put("privatekey.format", "base58");
@@ -254,6 +265,7 @@ public class coins {
         attrs.put("hdwallet.coin_type", 60); // may change in the future
         attrs.put("chain.id", (_testnetfun) (testnet -> testnet ? 4002 : 250));
         attrs.put("confirmations", 36);
+        attrs.put("block.time", 10);
         attrs.put("transfer.gaslimit", 21000);
         coins.put("fantom", attrs);
     }
@@ -602,7 +614,7 @@ public class coins {
         attrs.put("overloads", "ethereum");
         attrs.put("transfer.gaslimit", 150000);
         attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0xfb04393b9a8a59d7b6228fe544ae89d9064419fd" : "0xe41d2489571d322189246dafa5ebde1f4699f498"));
-        coins.put("0x", attrs);
+        coins.put("erc20-0x", attrs);
     }
 
     static {
@@ -610,7 +622,7 @@ public class coins {
         attrs.put("overloads", "ethereum");
         attrs.put("transfer.gaslimit", 150000);
         attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0xfe7eebb77d7ce6096119c5374a10d05ad43e7267" : "0x5ca9a71b1d01849c0a95490cc00559717fcf0d1d"));
-        coins.put("aeternity", attrs);
+        coins.put("erc20-aeternity", attrs);
     }
 
     static {
@@ -618,7 +630,7 @@ public class coins {
         attrs.put("overloads", "ethereum");
         attrs.put("transfer.gaslimit", 150000);
         attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x97ab730ac4877f9db639e7de03cd8bc526a81590" : "0xe94327d07fc17907b4db788e5adf2ed424addff6"));
-        coins.put("augur", attrs);
+        coins.put("erc20-augur", attrs);
     }
 
     static {
@@ -626,7 +638,7 @@ public class coins {
         attrs.put("overloads", "ethereum");
         attrs.put("transfer.gaslimit", 150000);
         attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0xf7e88715df7aceb0563b22f3f9a593d869eccdfa" : "0x0d8775f648430679a709e98d2b0cb6250d2887ef"));
-        coins.put("basicattentiontoken", attrs);
+        coins.put("erc20-basicattentiontoken", attrs);
     }
 
     static {
@@ -634,7 +646,7 @@ public class coins {
         attrs.put("overloads", "ethereum");
         attrs.put("transfer.gaslimit", 150000);
         attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x6369dcdb37c2f32c9ef1ae5124fa19266c8ea922" : "0xb8c77482e45f1f44de1745f52c74426c631bdd52"));
-        coins.put("binancecoin", attrs);
+        coins.put("erc20-binancecoin", attrs);
     }
 
     static {
@@ -642,7 +654,7 @@ public class coins {
         attrs.put("overloads", "ethereum");
         attrs.put("transfer.gaslimit", 150000);
         attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x40b329333e1cea0235f6a44a92e29fd6d6ab5184" : "0x514910771af9ca656af840dff83e8264ecf986ca"));
-        coins.put("chainlink", attrs);
+        coins.put("erc20-chainlink", attrs);
     }
 
     static {
@@ -650,7 +662,7 @@ public class coins {
         attrs.put("overloads", "ethereum");
         attrs.put("transfer.gaslimit", 150000);
         attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x1f1cb7a560db6e7cbdff2e6ec4544834acf2cfde" : "0x6b175474e89094c44da98b954eedeac495271d0f"));
-        coins.put("dai", attrs);
+        coins.put("erc20-dai", attrs);
     }
 
     static {
@@ -658,7 +670,7 @@ public class coins {
         attrs.put("overloads", "ethereum");
         attrs.put("transfer.gaslimit", 150000);
         attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0xa61ad21f601358586ad00aac9f2303512cc46b79" : "0x86fa049857e0209aa7d9e616f7eb3b3b78ecfdb0"));
-        coins.put("eos", attrs);
+        coins.put("erc20-eos", attrs);
     }
 
     static {
@@ -667,7 +679,7 @@ public class coins {
         attrs.put("decimals", 2);
         attrs.put("transfer.gaslimit", 150000);
         attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x6b4159cb8f3bb460e3fed5fd145c7d8312a8b980" : "0x056fd409e1d7a124bd7017459dfea2f387b6d5cd"));
-        coins.put("geminidollar", attrs);
+        coins.put("erc20-geminidollar", attrs);
     }
 
     static {
@@ -675,7 +687,7 @@ public class coins {
         attrs.put("overloads", "ethereum");
         attrs.put("transfer.gaslimit", 150000);
         attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x47a4cd1239d3e89ba2767d9bbd188ab6dcca39ed" : "0xa74476443119A942dE498590Fe1f2454d7D4aC0d"));
-        coins.put("golem", attrs);
+        coins.put("erc20-golem", attrs);
     }
 
     static {
@@ -683,7 +695,7 @@ public class coins {
         attrs.put("overloads", "ethereum");
         attrs.put("transfer.gaslimit", 150000);
         attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x1bf884dd8541487540889c0e27459986546a56c2" : "0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2"));
-        coins.put("maker", attrs);
+        coins.put("erc20-maker", attrs);
     }
 
     static {
@@ -691,7 +703,7 @@ public class coins {
         attrs.put("overloads", "ethereum");
         attrs.put("transfer.gaslimit", 150000);
         attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0xdf47bd229d3b2789e0ecb598c1f80910c5392f73" : "0xd26114cd6EE289AccF82350c8d8487fedB8A0C07"));
-        coins.put("omisego", attrs);
+        coins.put("erc20-omisego", attrs);
     }
 
     static {
@@ -699,7 +711,7 @@ public class coins {
         attrs.put("overloads", "ethereum");
         attrs.put("transfer.gaslimit", 150000);
         attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x5a89997f38429b5866809dc40a6d677c521ebab9" : "0x89d24a6b4ccb1b6faa2625fe562bdd9a23260359"));
-        coins.put("sai", attrs);
+        coins.put("erc20-sai", attrs);
     }
 
     static {
@@ -707,7 +719,7 @@ public class coins {
         attrs.put("overloads", "ethereum");
         attrs.put("transfer.gaslimit", 150000);
         attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0xfa4ff93882d2035661e90763cc2cd92ffeca7cb3" : "0x744d70fdbe2ba4cf95131626614a1763df805b9e"));
-        coins.put("status", attrs);
+        coins.put("erc20-status", attrs);
     }
 
     static {
@@ -716,7 +728,7 @@ public class coins {
         attrs.put("decimals", 6);
         attrs.put("transfer.gaslimit", 150000);
         attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x6ee856ae55b6e1a249f04cd3b947141bc146273c" : "0xdac17f958d2ee523a2206206994597c13d831ec7"));
-        coins.put("tether", attrs);
+        coins.put("erc20-tether", attrs);
     }
 
     static {
@@ -725,7 +737,7 @@ public class coins {
         attrs.put("decimals", 6);
         attrs.put("transfer.gaslimit", 150000);
         attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0xb37a76e727ad2c2dd09549cf30ef4433e2ee87a1" : "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"));
-        coins.put("usdcoin", attrs);
+        coins.put("erc20-usdcoin", attrs);
     }
 
     static {
@@ -734,7 +746,7 @@ public class coins {
         attrs.put("decimals", 8);
         attrs.put("transfer.gaslimit", 150000);
         attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x65058d7081fcdc3cd8727dbb7f8f9d52cefdd291" : "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599"));
-        coins.put("wrappedbitcoin", attrs);
+        coins.put("erc20-wrappedbitcoin", attrs);
     }
 
     static {
@@ -743,7 +755,151 @@ public class coins {
         attrs.put("decimals", 12);
         attrs.put("transfer.gaslimit", 150000);
         attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x36cb48e26fd55dab1c225ed40254fa0cbdb60c6d" : "0x05f4a42e251f2d52b8ed15e9fedaacfcef1fad27"));
-        coins.put("zilliqa", attrs);
+        coins.put("erc20-zilliqa", attrs);
+    }
+
+    static {
+        dict attrs = new dict();
+        attrs.put("overloads", "binancecoin");
+        attrs.put("decimals", 18);
+        attrs.put("transfer.gaslimit", 150000);
+        attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x473235419db3991e7e688a6b56389104f14e4026" : "0x101d82428437127bf1608f699cd651e6abf9766e"));
+        coins.put("bep20-basicattentiontoken", attrs);
+    }
+
+    static {
+        dict attrs = new dict();
+        attrs.put("overloads", "binancecoin");
+        attrs.put("decimals", 18);
+        attrs.put("transfer.gaslimit", 150000);
+        attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x6ce8da28e2f864420840cf74474eff5fd80e65b8" : "0x7130d2a12b9bcbfae4f2634d864a1ee1ce3ead9c"));
+        coins.put("bep20-bitcoin", attrs);
+    }
+
+    static {
+        dict attrs = new dict();
+        attrs.put("overloads", "binancecoin");
+        attrs.put("decimals", 18);
+        attrs.put("transfer.gaslimit", 150000);
+        attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x4a3c800a8d587166882ce5ee968095dcbbe08000" : "0x8ff795a6f4d97e7887c79bea79aba5cc76444adf"));
+        coins.put("bep20-bitcoincash", attrs);
+    }
+
+    static {
+        dict attrs = new dict();
+        attrs.put("overloads", "binancecoin");
+        attrs.put("decimals", 18);
+        attrs.put("transfer.gaslimit", 150000);
+        attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x7874a63a2363037ce84b1473aa14f83eb29cf0a4" : "0x3ee2200efb3400fabb9aacf31297cbdd1d435d47"));
+        coins.put("bep20-cardano", attrs);
+    }
+
+    static {
+        dict attrs = new dict();
+        attrs.put("overloads", "binancecoin");
+        attrs.put("decimals", 18);
+        attrs.put("transfer.gaslimit", 150000);
+        attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x420d87a31f7dc65330b8ce5668ca17ba2029d563" : "0xf8a0bf9cf54bb92f17374d9e9a321e6a111a51bd"));
+        coins.put("bep20-chainlink", attrs);
+    }
+
+    static {
+        dict attrs = new dict();
+        attrs.put("overloads", "binancecoin");
+        attrs.put("decimals", 18);
+        attrs.put("transfer.gaslimit", 150000);
+        attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0xec5dcb5dbf4b114c9d0f65bccab49ec54f6a0867" : "0x1af3f329e8be154074d8769d1ffa4ee058b1dbc3"));
+        coins.put("bep20-dai", attrs);
+    }
+
+    static {
+        dict attrs = new dict();
+        attrs.put("overloads", "binancecoin");
+        attrs.put("decimals", 8);
+        attrs.put("transfer.gaslimit", 150000);
+        attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x3219c9d7fe0d0745b4381fbb4bba935ca9f2d8fa" : "0xba2ae424d960c26247dd6c32edc70b295c744c43"));
+        coins.put("bep20-dogecoin", attrs);
+    }
+
+    static {
+        dict attrs = new dict();
+        attrs.put("overloads", "binancecoin");
+        attrs.put("decimals", 18);
+        attrs.put("transfer.gaslimit", 150000);
+        attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x90f87f413ffa32f9002b2935fea9de201c389141" : "0x56b6fb708fc5732dec1afc8d8556423a2edccbd6"));
+        coins.put("bep20-eos", attrs);
+    }
+
+    static {
+        dict attrs = new dict();
+        attrs.put("overloads", "binancecoin");
+        attrs.put("decimals", 18);
+        attrs.put("transfer.gaslimit", 150000);
+        attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0xd66c6b4f0be8ce5b39d52e0fd1344c389929b378" : "0x2170ed0880ac9a755fd29b2688956bd959f933f8"));
+        coins.put("bep20-ethereum", attrs);
+    }
+
+    static {
+        dict attrs = new dict();
+        attrs.put("overloads", "binancecoin");
+        attrs.put("decimals", 18);
+        attrs.put("transfer.gaslimit", 150000);
+        attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x426e2e210869d2c5f0f8ca3aa704980427115ab0" : "0x3d6545b08693dae087e957cb1180ee38b9e3c25e"));
+        coins.put("bep20-ethereumclassic", attrs);
+    }
+
+    static {
+        dict attrs = new dict();
+        attrs.put("overloads", "binancecoin");
+        attrs.put("decimals", 18);
+        attrs.put("transfer.gaslimit", 150000);
+        attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x969f147b6b8d81f86175de33206a4fd43df17913" : "0x4338665cbb7b2485a8855a139b75d5e34ab0db94"));
+        coins.put("bep20-litecoin", attrs);
+    }
+
+    static {
+        dict attrs = new dict();
+        attrs.put("overloads", "binancecoin");
+        attrs.put("decimals", 18);
+        attrs.put("transfer.gaslimit", 150000);
+        attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x3a1595e01084837d79d145126b5ba3234c3064eb" : "0x5f0da599bb2cccfcf6fdfd7d81743b6020864350"));
+        coins.put("bep20-maker", attrs);
+    }
+
+    static {
+        dict attrs = new dict();
+        attrs.put("overloads", "binancecoin");
+        attrs.put("decimals", 18);
+        attrs.put("transfer.gaslimit", 150000);
+        attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0xa83575490d7df4e2f47b7d38ef351a2722ca45b9" : "0x1d2f0da169ceb9fc7b3144628db156f3f6c60dbe"));
+        coins.put("bep20-ripple", attrs);
+    }
+
+    static {
+        dict attrs = new dict();
+        attrs.put("overloads", "binancecoin");
+        attrs.put("decimals", 18);
+        attrs.put("transfer.gaslimit", 150000);
+        attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x337610d27c682e347c9cd60bd4b3b107c9d34ddd" : "0x55d398326f99059ff775485246999027b3197955"));
+        coins.put("bep20-tether", attrs);
+    }
+
+    static {
+        dict attrs = new dict();
+        attrs.put("overloads", "binancecoin");
+        attrs.put("decimals", 18);
+        attrs.put("transfer.gaslimit", 150000);
+        attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x64544969ed7ebf5f083679233325356ebe738930" : "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d"));
+        coins.put("bep20-usdcoin", attrs);
+    }
+
+    static {
+        dict attrs = new dict();
+        attrs.put("overloads", "binancecoin");
+        attrs.put("decimals", 18);
+        attrs.put("transfer.gaslimit", 150000);
+        attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x7cfd0b2aa0ef973df82509cc35db295e25255e8a" : "0x1ba42e5193dfa8b03d15dd1b86a3113bbbef8eeb"));
+        coins.put("bep20-zcash", attrs);
     }
 
     public static <A> A attr(String name, String coin) {
