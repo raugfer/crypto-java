@@ -676,6 +676,14 @@ public class coins {
     static {
         dict attrs = new dict();
         attrs.put("overloads", "ethereum");
+        attrs.put("transfer.gaslimit", 150000);
+        attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x2c7bbacca71a6799feda581fd8fd69a785f60ecf" : "0x4e15361fd6b4bb609fa63c81a2be19d873717870"));
+        coins.put("erc20-fantom", attrs);
+    }
+
+    static {
+        dict attrs = new dict();
+        attrs.put("overloads", "ethereum");
         attrs.put("decimals", 2);
         attrs.put("transfer.gaslimit", 150000);
         attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x6b4159cb8f3bb460e3fed5fd145c7d8312a8b980" : "0x056fd409e1d7a124bd7017459dfea2f387b6d5cd"));
@@ -761,7 +769,6 @@ public class coins {
     static {
         dict attrs = new dict();
         attrs.put("overloads", "binancecoin");
-        attrs.put("decimals", 18);
         attrs.put("transfer.gaslimit", 150000);
         attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x473235419db3991e7e688a6b56389104f14e4026" : "0x101d82428437127bf1608f699cd651e6abf9766e"));
         coins.put("bep20-basicattentiontoken", attrs);
@@ -770,7 +777,6 @@ public class coins {
     static {
         dict attrs = new dict();
         attrs.put("overloads", "binancecoin");
-        attrs.put("decimals", 18);
         attrs.put("transfer.gaslimit", 150000);
         attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x6ce8da28e2f864420840cf74474eff5fd80e65b8" : "0x7130d2a12b9bcbfae4f2634d864a1ee1ce3ead9c"));
         coins.put("bep20-bitcoin", attrs);
@@ -779,7 +785,6 @@ public class coins {
     static {
         dict attrs = new dict();
         attrs.put("overloads", "binancecoin");
-        attrs.put("decimals", 18);
         attrs.put("transfer.gaslimit", 150000);
         attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x4a3c800a8d587166882ce5ee968095dcbbe08000" : "0x8ff795a6f4d97e7887c79bea79aba5cc76444adf"));
         coins.put("bep20-bitcoincash", attrs);
@@ -788,7 +793,6 @@ public class coins {
     static {
         dict attrs = new dict();
         attrs.put("overloads", "binancecoin");
-        attrs.put("decimals", 18);
         attrs.put("transfer.gaslimit", 150000);
         attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x7874a63a2363037ce84b1473aa14f83eb29cf0a4" : "0x3ee2200efb3400fabb9aacf31297cbdd1d435d47"));
         coins.put("bep20-cardano", attrs);
@@ -797,7 +801,6 @@ public class coins {
     static {
         dict attrs = new dict();
         attrs.put("overloads", "binancecoin");
-        attrs.put("decimals", 18);
         attrs.put("transfer.gaslimit", 150000);
         attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x420d87a31f7dc65330b8ce5668ca17ba2029d563" : "0xf8a0bf9cf54bb92f17374d9e9a321e6a111a51bd"));
         coins.put("bep20-chainlink", attrs);
@@ -806,7 +809,6 @@ public class coins {
     static {
         dict attrs = new dict();
         attrs.put("overloads", "binancecoin");
-        attrs.put("decimals", 18);
         attrs.put("transfer.gaslimit", 150000);
         attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0xec5dcb5dbf4b114c9d0f65bccab49ec54f6a0867" : "0x1af3f329e8be154074d8769d1ffa4ee058b1dbc3"));
         coins.put("bep20-dai", attrs);
@@ -824,7 +826,6 @@ public class coins {
     static {
         dict attrs = new dict();
         attrs.put("overloads", "binancecoin");
-        attrs.put("decimals", 18);
         attrs.put("transfer.gaslimit", 150000);
         attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x90f87f413ffa32f9002b2935fea9de201c389141" : "0x56b6fb708fc5732dec1afc8d8556423a2edccbd6"));
         coins.put("bep20-eos", attrs);
@@ -833,7 +834,6 @@ public class coins {
     static {
         dict attrs = new dict();
         attrs.put("overloads", "binancecoin");
-        attrs.put("decimals", 18);
         attrs.put("transfer.gaslimit", 150000);
         attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0xd66c6b4f0be8ce5b39d52e0fd1344c389929b378" : "0x2170ed0880ac9a755fd29b2688956bd959f933f8"));
         coins.put("bep20-ethereum", attrs);
@@ -842,7 +842,6 @@ public class coins {
     static {
         dict attrs = new dict();
         attrs.put("overloads", "binancecoin");
-        attrs.put("decimals", 18);
         attrs.put("transfer.gaslimit", 150000);
         attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x426e2e210869d2c5f0f8ca3aa704980427115ab0" : "0x3d6545b08693dae087e957cb1180ee38b9e3c25e"));
         coins.put("bep20-ethereumclassic", attrs);
@@ -851,7 +850,6 @@ public class coins {
     static {
         dict attrs = new dict();
         attrs.put("overloads", "binancecoin");
-        attrs.put("decimals", 18);
         attrs.put("transfer.gaslimit", 150000);
         attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x969f147b6b8d81f86175de33206a4fd43df17913" : "0x4338665cbb7b2485a8855a139b75d5e34ab0db94"));
         coins.put("bep20-litecoin", attrs);
@@ -860,7 +858,6 @@ public class coins {
     static {
         dict attrs = new dict();
         attrs.put("overloads", "binancecoin");
-        attrs.put("decimals", 18);
         attrs.put("transfer.gaslimit", 150000);
         attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x3a1595e01084837d79d145126b5ba3234c3064eb" : "0x5f0da599bb2cccfcf6fdfd7d81743b6020864350"));
         coins.put("bep20-maker", attrs);
@@ -869,7 +866,6 @@ public class coins {
     static {
         dict attrs = new dict();
         attrs.put("overloads", "binancecoin");
-        attrs.put("decimals", 18);
         attrs.put("transfer.gaslimit", 150000);
         attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0xa83575490d7df4e2f47b7d38ef351a2722ca45b9" : "0x1d2f0da169ceb9fc7b3144628db156f3f6c60dbe"));
         coins.put("bep20-ripple", attrs);
@@ -878,7 +874,6 @@ public class coins {
     static {
         dict attrs = new dict();
         attrs.put("overloads", "binancecoin");
-        attrs.put("decimals", 18);
         attrs.put("transfer.gaslimit", 150000);
         attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x337610d27c682e347c9cd60bd4b3b107c9d34ddd" : "0x55d398326f99059ff775485246999027b3197955"));
         coins.put("bep20-tether", attrs);
@@ -887,7 +882,6 @@ public class coins {
     static {
         dict attrs = new dict();
         attrs.put("overloads", "binancecoin");
-        attrs.put("decimals", 18);
         attrs.put("transfer.gaslimit", 150000);
         attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x64544969ed7ebf5f083679233325356ebe738930" : "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d"));
         coins.put("bep20-usdcoin", attrs);
@@ -896,10 +890,18 @@ public class coins {
     static {
         dict attrs = new dict();
         attrs.put("overloads", "binancecoin");
-        attrs.put("decimals", 18);
         attrs.put("transfer.gaslimit", 150000);
         attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x7cfd0b2aa0ef973df82509cc35db295e25255e8a" : "0x1ba42e5193dfa8b03d15dd1b86a3113bbbef8eeb"));
         coins.put("bep20-zcash", attrs);
+    }
+
+    static {
+        dict attrs = new dict();
+        attrs.put("overloads", "binancecoin");
+        attrs.put("decimals", 12);
+        attrs.put("transfer.gaslimit", 150000);
+        attrs.put("contract.address", (_testnetfun) (testnet -> testnet ? "0x75d84350ced26ef211c85460a415622a307514be" : "0xb86abcb37c3a4b64f74f59301aff131a1becc787"));
+        coins.put("bep20-zilliqa", attrs);
     }
 
     public static <A> A attr(String name, String coin) {
