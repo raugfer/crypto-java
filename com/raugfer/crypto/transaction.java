@@ -504,6 +504,72 @@ public class transaction {
         return bytes.concat(b1, b2, b3, b4);
     }
 
+    private static byte[] int_neo_bytes(BigInteger data){
+        if (data.equals(BigInteger.ZERO)) {
+            return new byte[0];
+        }
+        byte[] bs = data.toByteArray();
+        if(bs.length == 0) {
+            return new byte[0];
+        }
+        if(data.signum() < 0) {
+            byte b = data.negate().toByteArray()[0];
+            byte[] res = bytes.rev(bs);
+            if(b >> 7 == 1){
+                byte[] t = new byte[res.length + 1];
+                System.arraycopy(res,0,t,0,res.length);
+                t[res.length] = (byte)255;
+                return t;
+            }
+            return res;
+        }else{
+            byte b = bs[0];
+            byte[] res = bytes.rev(bs);
+            if(b >> 7 == 1){
+                byte[] t = new byte[res.length + 1];
+                System.arraycopy(res,0,t,0,res.length);
+                t[res.length] = (byte)0;
+                return t;
+            }
+            return res;
+        }
+    }
+
+    private static byte[] ont_code_encode(dict fields, String coin, boolean testnet) {
+        String from = fields.get("from", null);
+        String to = fields.get("to", null);
+        BigInteger amount = fields.get("amount", BigInteger.ZERO);
+        byte[] contract = fields.get("contract", new byte[]{});
+        byte[] amountBytes;
+        if (amount.equals(BigInteger.ONE.negate())) {
+            amountBytes = new byte[]{0x4f};
+        } else if (amount.equals(BigInteger.ZERO)) {
+            amountBytes = new byte[]{0x00};
+        } else if (amount.compareTo(BigInteger.ZERO) > 0 && amount.compareTo(BigInteger.valueOf(16)) <= 0) {
+            amountBytes = new byte[]{(byte) (0x51 - 1 + amount.byteValue())};
+        } else {
+            amountBytes = int_neo_bytes(amount);
+            amountBytes = script.OP_PUSHDATA(amountBytes);
+        }
+        byte[] fromBytes = binint.n2b(wallet.address_decode(from, coin, testnet).l);
+        byte[] toBytes = binint.n2b(wallet.address_decode(to, coin, testnet).l);
+        byte[] initMethod = "transfer".getBytes();
+        byte[] nativeInvokeName = "Ontology.Native.Invoke".getBytes();
+        byte[] b1 = new byte[]{(byte) 0x00, (byte) 0xc6, (byte) 0x6b};
+        byte[] b2 = script.OP_PUSHDATA(fromBytes);
+        byte[] b3 = new byte[]{(byte) 0x6a, (byte) 0x7c, (byte) 0xc8};
+        byte[] b4 = script.OP_PUSHDATA(toBytes);
+        byte[] b5 = b3;
+        byte[] b6 = amountBytes;
+        byte[] b7 = b3;
+        byte[] b8 = new byte[]{(byte) 0x6c, (byte) 0x51, (byte) 0xc1};
+        byte[] b9 = script.OP_PUSHDATA(initMethod);
+        byte[] b10 = script.OP_PUSHDATA(contract);
+        byte[] b11 = new byte[]{(byte) 0x00, (byte) 0x68};
+        byte[] b12 = script.OP_PUSHDATA(nativeInvokeName);
+        return bytes.concat(b1, b2, b3, b4, b5, bytes.concat(b6, b7, b8, b9, b10, bytes.concat(b11, b12)));
+    }
+
     public static byte[] transaction_encode(dict fields, String coin, boolean testnet) {
         String fmt = coins.attr("transaction.format", coin, testnet);
         if (fmt.equals("inout")) {
@@ -998,6 +1064,44 @@ public class transaction {
             }
             return protobuf.dumps(data);
         }
+        if (fmt.equals("ontologytx")) {
+            BigInteger txtype = fields.get("type", BigInteger.valueOf(0xd1));
+            BigInteger version = fields.get("version", BigInteger.ZERO);
+            BigInteger nonce = fields.get("nonce", BigInteger.ZERO);
+            BigInteger gasprice = fields.get("gasprice", BigInteger.ZERO);
+            BigInteger gaslimit = fields.get("gaslimit", BigInteger.ZERO);
+            String payer = fields.get("payer", null);
+            byte[] sigsBytes = new byte[0];
+            if (fields.has("sigs")) {
+                dict[] sigs = fields.get("sigs");
+                byte[] len_sigs = varint(BigInteger.valueOf(sigs.length));
+                sigsBytes = bytes.concat(len_sigs, sigsBytes);
+                byte[] sigdata;
+                byte[] pubkeys;
+                for (dict sigobject : sigs) {
+                    sigdata = sigobject.get("sigdata");
+                    pubkeys = sigobject.get("pubkeys");
+                    sigdata = script.OP_PUSHDATA(sigdata);
+                    pubkeys = bytes.concat(script.OP_PUSHDATA(pubkeys), script.OP_CHECKSIG);
+                    byte[] len_sigdata = varint(BigInteger.valueOf(sigdata.length));
+                    byte[] len_pubkeys = varint(BigInteger.valueOf(pubkeys.length));
+                    sigsBytes = bytes.concat(sigsBytes, len_sigdata, sigdata, len_pubkeys, pubkeys);
+                }
+            }
+            byte[] payerBytes = binint.n2b(wallet.address_decode(payer, coin, testnet).l);
+            byte[] code = ont_code_encode(fields, coin, testnet);
+            byte[] b1 = int8(version);
+            byte[] b2 = int8(txtype);
+            byte[] b3 = int32(nonce);
+            byte[] b4 = int64(gasprice);
+            byte[] b5 = int64(gaslimit);
+            byte[] b6 = payerBytes;
+            byte[] b7 = varint(BigInteger.valueOf(code.length));
+            byte[] b8 = code;
+            byte[] b9 = new byte[]{0x00};
+            byte[] b10 = sigsBytes;
+            return bytes.concat(b1, b2, b3, b4, b5, bytes.concat(b6, b7, b8, b9, b10));
+        }
         throw new IllegalStateException("Unknown format");
     }
 
@@ -1164,6 +1268,86 @@ public class transaction {
         fields.put("invocation", invocation_script);
         fields.put("verification", verification_script);
         return new pair<>(fields, txn);
+    }
+
+    private static BigInteger neo_bytes_int(byte[] ba){
+        if(ba.length == 0){
+            return BigInteger.ZERO;
+        }
+        byte[] bs = bytes.rev(ba);
+        if(bs[0] >> 7 == 1) {
+            for(int i = 0;i < bs.length;i++) {
+                bs[i] = (byte)~bs[i];
+            }
+            BigInteger temp = new BigInteger(bs);
+            temp.add(BigInteger.ONE);
+            return temp.negate();
+        }
+        return new BigInteger(bs);
+    }
+
+    private static dict ont_code_decode(byte[] txn, String coin, boolean testnet) {
+        txn = bytes.sub(txn, 3);
+        pair<BigInteger, byte[]> r1 = parse_int8(txn);
+        int fromSize = r1.l.intValue();
+        txn = r1.r;
+        String from = wallet.address_encode(binint.b2n(bytes.sub(txn, 0, fromSize)), "address", coin, testnet);
+        txn = bytes.sub(txn, fromSize);
+        txn = bytes.sub(txn, 3);
+        pair<BigInteger, byte[]> r2 = parse_int8(txn);
+        int toSize = r2.l.intValue();
+        txn = r2.r;
+        String to = wallet.address_encode(binint.b2n(bytes.sub(txn, 0, toSize)), "address", coin, testnet);
+        txn = bytes.sub(txn, toSize);
+        txn = bytes.sub(txn, 3);
+        pair<BigInteger, byte[]> r3 = parse_int8(txn);
+        BigInteger amount = r3.l;
+        txn = r3.r;
+        if (Arrays.equals(bytes.sub(txn, 0, 3), new byte[]{(byte) 0x6a, (byte) 0x7c, (byte) 0xc8})) {
+            if (amount.equals(binint.b2n(new byte[]{(byte) 0x4f}))) {
+                amount = BigInteger.ONE.negate();
+            } else if (amount.equals(binint.b2n(new byte[]{(byte) 0x00}))) {
+                amount = BigInteger.ZERO;
+            } else {
+                amount = amount.subtract(binint.b2n(new byte[]{(byte) 0x51})).add(BigInteger.ONE);
+            }
+        } else {
+            int amountSize = amount.intValue();
+            byte[] amountBytes = bytes.sub(txn, 0, amountSize);
+            amount = neo_bytes_int(amountBytes);
+            txn = bytes.sub(txn, amountSize);
+        }
+        txn = bytes.sub(txn, 3);
+        txn = bytes.sub(txn, 3);
+        pair<BigInteger, byte[]> r4 = parse_int8(txn);
+        int initMethodSize = r4.l.intValue();
+        txn = r4.r;
+        byte[] initMethod = bytes.sub(txn, 0, initMethodSize);
+        if (!Arrays.equals(initMethod, "transfer".getBytes())) {
+            throw new IllegalArgumentException("Method error");
+        }
+        txn = bytes.sub(txn, initMethodSize);
+        pair<BigInteger, byte[]> r5 = parse_int8(txn);
+        int contractSize = r5.l.intValue();
+        txn = r5.r;
+        byte[] contract = bytes.sub(txn, 0, contractSize);
+        txn = bytes.sub(txn, contractSize);
+        txn = bytes.sub(txn, 2);
+        pair<BigInteger, byte[]> r6 = parse_int8(txn);
+        int nativeInvokeNameSize = r6.l.intValue();
+        txn = r6.r;
+        byte[] nativeInvokeName = bytes.sub(txn, 0, nativeInvokeNameSize);
+        if (!Arrays.equals(nativeInvokeName, "Ontology.Native.Invoke".getBytes())) {
+            throw new IllegalArgumentException("NativeInvokeName error");
+        }
+        txn = bytes.sub(txn, nativeInvokeNameSize);
+        assert txn.length == 0;
+        dict fields = new dict();
+        fields.put("from", from);
+        fields.put("to", to);
+        fields.put("amount", amount);
+        fields.put("contract", contract);
+        return fields;
     }
 
     public static dict transaction_decode(byte[] txn, String coin, boolean testnet) {
@@ -1789,6 +1973,82 @@ public class transaction {
             fields.put("amount", message_params.get(3));
             return fields;
         }
+        if (fmt.equals("ontologytx")) {
+            if (txn.length < 1) throw new IllegalArgumentException("End of input");
+            pair<BigInteger, byte[]> r1 = parse_int8(txn);
+            BigInteger version = r1.l;
+            txn = r1.r;
+            if (!version.equals(BigInteger.ZERO)) throw new IllegalArgumentException("Invalid version");
+            if (txn.length < 1) throw new IllegalArgumentException("End of input");
+            pair<BigInteger, byte[]> r2 = parse_int8(txn);
+            BigInteger txType = r2.l;
+            txn = r2.r;
+            if (!txType.equals(binint.b2n(new byte[]{(byte) 0xd1}))) throw new IllegalArgumentException("Invalid txtype");
+            if (txn.length < 4) throw new IllegalArgumentException("End of input");
+            pair<BigInteger, byte[]> r3 = parse_int32(txn);
+            BigInteger nonce = r3.l;
+            txn = r3.r;
+            if (txn.length < 8) throw new IllegalArgumentException("End of input");
+            pair<BigInteger, byte[]> r4 = parse_int64(txn);
+            BigInteger gasprice = r4.l;
+            txn = r4.r;
+            if (txn.length < 8) throw new IllegalArgumentException("End of input");
+            pair<BigInteger, byte[]> r5 = parse_int64(txn);
+            BigInteger gaslimit = r5.l;
+            txn = r5.r;
+            if (txn.length < 20) throw new IllegalArgumentException("End of input");
+            String payer = wallet.address_encode(binint.b2n(bytes.sub(txn, 0, 20)), "address", coin, testnet);
+            txn = bytes.sub(txn, 20);
+            if (txn.length < 1) throw new IllegalArgumentException("End of input");
+            pair<BigInteger, byte[]> r6 = parse_int8(txn);
+            int codeSize = r6.l.intValue();
+            txn = r6.r;
+            if (txn.length < codeSize) throw new IllegalArgumentException("End of input");
+            dict codeFields = ont_code_decode(bytes.sub(txn, 0, codeSize), coin, testnet);
+            txn = bytes.sub(txn, codeSize);
+            pair<BigInteger, byte[]> r7 = parse_int8(txn);
+            BigInteger attributes = r7.l;
+            if (!attributes.equals(BigInteger.ZERO)) throw new IllegalArgumentException("Invalid attributes");
+            txn = r7.r;
+            dict fields = new dict();
+            fields.put("nonce", nonce);
+            fields.put("gasprice", gasprice);
+            fields.put("gaslimit", gaslimit);
+            fields.put("payer", payer);
+            fields.put("from", codeFields.get("from"));
+            fields.put("to", codeFields.get("to"));
+            fields.put("amount", codeFields.get("amount"));
+            fields.put("contract", codeFields.get("contract"));
+            if (txn.length > 0) {
+                pair<BigInteger, byte[]> t = parse_varint(txn);
+                BigInteger count = t.l;
+                txn = t.r;
+                dict[] sigs = new dict[count.intValue()];
+                for (int i = 0; i < sigs.length; i++) {
+                    pair<BigInteger, byte[]> t1 = parse_varint(txn);
+                    txn = t1.r;
+                    pair<BigInteger, byte[]> t2 = parse_varint(txn);
+                    int len_sigdata1 = t2.l.intValue();
+                    txn = t2.r;
+                    byte[] sigdata = bytes.sub(txn, 0, len_sigdata1);
+                    txn = bytes.sub(txn, len_sigdata1);
+                    pair<BigInteger, byte[]> t3 = parse_varint(txn);
+                    txn = t3.r;
+                    pair<BigInteger, byte[]> t4 = parse_varint(txn);
+                    int len_pubkeys1 = t4.l.intValue();
+                    txn = t4.r;
+                    byte[] pubkeys = bytes.sub(txn, 0, len_pubkeys1);
+                    txn = bytes.sub(txn, len_pubkeys1 + 1);
+                    dict sigobject = new dict();
+                    sigobject.put("pubkeys", pubkeys);
+                    sigobject.put("sigdata", sigdata);
+                    sigs[i] = sigobject;
+                }
+                fields.put("sigs", sigs);
+                if (txn.length != 0) throw new IllegalArgumentException("Invalid transaction");
+            }
+            return fields;
+        }
         throw new IllegalStateException("Unknown format");
     }
 
@@ -1832,6 +2092,11 @@ public class transaction {
         if (txnfmt.equals("protobuf")) {
             dict fields = transaction_decode(txn, coin, testnet);
             if (fields.has("signature")) fields.del("signature");
+            txn = transaction_encode(fields, coin, testnet);
+        }
+        if (txnfmt.equals("ontologytx")) {
+            dict fields = transaction_decode(txn, coin, testnet);
+            if (fields.has("sigs")) fields.del("sigs");
             txn = transaction_encode(fields, coin, testnet);
         }
         String fun = coins.attr("transaction.hashing", coin, testnet);
@@ -2357,6 +2622,25 @@ public class transaction {
             txn = transaction_encode(fields, coin, testnet);
             byte[] signature = signing.signature_create(privatekey, txn, null, coin, testnet);
             fields.put("signature", signature);
+            return transaction_encode(fields, coin, testnet);
+        }
+        if (fmt.equals("ontologytx")) {
+            dict fields = transaction_decode(txn, coin, testnet);
+            if (fields.has("sigs")) fields.del("sigs");
+            txn = transaction_encode(fields, coin, testnet);
+            if (!(params instanceof String[])) params = new String[]{(String) params};
+            String[] privatekeys = (String[]) params;
+            dict[] sigs = new dict[privatekeys.length];
+            for (int i = 0; i < privatekeys.length; i++) {
+                byte[] sigData = signing.signature_create(privatekeys[i], txn, null, coin, testnet);
+                sigData = bytes.concat(new byte[]{(byte) 0x01}, sigData);
+                String publickey = wallet.publickey_from_privatekey(privatekeys[i], coin, testnet);
+                dict sigobject = new dict();
+                sigobject.put("pubkeys", binint.h2b(publickey));
+                sigobject.put("sigdata", sigData);
+                sigs[i] = sigobject;
+            }
+            fields.put("sigs", sigs);
             return transaction_encode(fields, coin, testnet);
         }
         throw new IllegalStateException("Unknown format");

@@ -5,6 +5,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 public class service {
 
@@ -112,6 +113,11 @@ public class service {
         }
         if (fmt.equals("protobuf")) {
             return BigInteger.ZERO;
+        }
+        if (fmt.equals("ontologytx")) {
+            BigInteger gaslimit = BigInteger.valueOf(coins.attr("transfer.gaslimit", 0, coin, testnet));
+            BigInteger gasprice = BigInteger.valueOf(coins.attr("transfer.gasprice", 0, coin, testnet));
+            return gaslimit.multiply(gasprice);
         }
         throw new IllegalArgumentException("Unknown format");
     }
@@ -535,6 +541,27 @@ public class service {
             fields.put("amount", amount);
             byte[] txn = transaction.transaction_encode(fields, coin, testnet);
             return new pair<>(new byte[][]{ txn }, f);
+        }
+        if (fmt.equals("ontologytx")) {
+            String source_address = source_addresses[0];
+            context f = (lookup) -> lookup.call(source_address);
+            int gas = coins.attr("transfer.gaslimit", coin, testnet);
+            BigInteger gaslimit = BigInteger.valueOf(gas);
+            BigInteger gasprice = fee.divide(gaslimit);
+            BigInteger nonce = BigInteger.valueOf(BigInteger.valueOf(new Random().nextInt()).intValue()).abs();
+            byte[] contract = coins.attr("contract.address", new byte[]{}, coin, testnet);
+            dict fields = new dict();
+            fields.put("nonce", nonce);
+            fields.put("gasprice", gasprice);
+            fields.put("gaslimit", gaslimit);
+            fields.put("payer", source_addresses.length > 1? source_addresses[1] : source_addresses[0]);
+            fields.put("from", source_addresses[0]);
+            fields.put("to", address);
+            fields.put("amount", amount);
+            fields.put("contract", contract);
+            byte[] txn = transaction.transaction_encode(fields, coin, testnet);
+            return new pair<>(new byte[][]{txn}, f);
+
         }
         throw new IllegalArgumentException("Unknown format");
     }
